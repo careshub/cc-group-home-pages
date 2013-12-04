@@ -367,14 +367,7 @@ if ( class_exists( 'BP_Group_Extension' ) ) : // Recommended, to prevent problem
             // Grab your data out of the $_POST global and save as necessary
         // }
  
-        // function widget_display() { ?>
-            <!-- <div class="info-group">
-                <h4><?php echo esc_attr( $this->name ) ?></h4>
-                <p>
-                    You could display a small snippet of information from your group extension here. It will show on the group home screen.
-                </p>
-            </div> -->
-            <?php
+        // function widget_display() {
         // }
 
     }
