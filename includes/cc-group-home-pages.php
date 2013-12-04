@@ -133,7 +133,7 @@ add_action( 'init', 'register_cpt_group_home_page' );
 	  );
 	}
 
-	/* Display the post meta box. */
+	/* Display the post meta box on the post type edit page in wp-admin*/
 	function cc_group_home_page_meta_box( $object, $box ) { ?>
 
 	  <?php wp_nonce_field( basename( __FILE__ ), 'group_home_association_nonce' ); ?>
@@ -180,7 +180,7 @@ add_action( 'init', 'register_cpt_group_home_page' );
 	  if ( !empty($_POST['group_home_page_association']) && is_array($_POST['group_home_page_association']) ) {
 	        delete_post_meta($post_id, 'group_home_page_association');
 	        foreach ($_POST['group_home_page_association'] as $association) {
-	        	//This stores multiple entries, in the event that the page is associated with multiple groups. This approach makes the meta query much more straightforward.
+	        	// This stores multiple entries, in the event that the page is associated with multiple groups. This approach makes the meta query much more straightforward.
 	            add_post_meta($post_id, 'group_home_page_association', $association);
 	        }
 	    }
@@ -225,7 +225,7 @@ if ( class_exists( 'BP_Group_Extension' ) ) : // Recommended, to prevent problem
 	     */
 	    function settings_screen( $group_id ) {
 
-	        $custom_front_query = cc_get_group_home_page_post( 'draft' );
+	        $custom_front_query = cc_get_group_home_page_post( $group_id, 'draft' );
 	        // print_r($custom_front_query->posts);
 	        if ( empty( $custom_front_query->posts) ) {
 				// The group doesn't have a front page yet, so we need to create one. For a variety of reasons, but mostly we need the post ID.
@@ -254,12 +254,9 @@ if ( class_exists( 'BP_Group_Extension' ) ) : // Recommended, to prevent problem
 	                    wp_editor( $post_content, 'group_home_page_content', $args); 
 	                ?>
 	                <input type="hidden" name="group_home_page_post_id" value="<?php echo $post_id; ?>">
-	                <!-- <textarea name="bp_simple_post_text" id="bp_simple_post_text" ><?php echo $content; ?></textarea> -->
 	                <?php
 
 			}
-					// $meta = get_post_meta( get_the_ID(),'group_home_page_association',false );
-					//print_r($meta);
 
 	    }
 	 
@@ -269,7 +266,9 @@ if ( class_exists( 'BP_Group_Extension' ) ) : // Recommended, to prevent problem
 	     */
 	    function settings_screen_save( $group_id ) {
 
-	    	if ( isset( $_POST['group_home_page_content'] ) ) {
+	    	// If the page is new, $_POST['create_a_group_home_page'] will be set
+	    	// If the page already exists, $_POST['group_home_page_content'] will be set
+	    	if ( isset( $_POST['group_home_page_content'] ) || isset( $_POST['create_a_group_home_page'] ) ) {
 
 	    		// Get group name to use for title
 	    		$current_group = groups_get_group( array( 'group_id' => $group_id ) );
@@ -291,6 +290,11 @@ if ( class_exists( 'BP_Group_Extension' ) ) : // Recommended, to prevent problem
 	   	        	$post_data['post_author'] = get_current_user_id();
 	   	        }
 
+	   			// $towrite = PHP_EOL . print_r($post_data, TRUE);
+				// $fp = fopen('creating_group_home_page.txt', 'a');
+				// fwrite($fp, $towrite);
+				// fclose($fp);
+
 	        	// Save the post
 	            $post_id = wp_insert_post($post_data);
 
@@ -298,53 +302,14 @@ if ( class_exists( 'BP_Group_Extension' ) ) : // Recommended, to prevent problem
 	            if ( $post_id ) {
 		            // Associate the post with the group
 					update_post_meta( $post_id, 'group_home_page_association', $group_id, false );
-					//Add a success message
+					// Add a success message
 					bp_core_add_message( 'Group home page was successfully updated.', 'success' );
 
 				} else {
-					//Something went wrong
+					// Something went wrong
 					bp_core_add_message( 'We couldn\'t update the group home page at this time.', 'error' );
 				}
-	        }
-
-	        if ( isset( $_POST['create_a_group_home_page'] ) ) {
-
-	    		// Get group name to use for title
-	    		$current_group = groups_get_group( array( 'group_id' => $group_id ) );
-
-		    	// Some defaults
-				$post_data = array(
-	                'post_content' => '',
-	                'post_type' => 'group_home_page',
-	                'post_status' => 'draft',
-	                'post_title' => $current_group->name,
-	                'comment_status' => 'closed',
-	                'post_author' => get_current_user_id()
-	            );
-
-	        	// Save the post
-	            $post_id = wp_insert_post($post_data);
-
-	        	// If the post save was successful, save the postmeta
-	            if ( $post_id ) {
-		            // Associate the post with the group
-					update_post_meta( $post_id, 'group_home_page_association', $group_id, false );
-					//Add a success message
-					bp_core_add_message( 'Group home page was successfully created.', 'success' );
-
-				} else {
-					//Something went wrong
-					bp_core_add_message( 'We couldn\'t create the group home page at this time.', 'error' );
-				}
-	        }
-
-
-	        $towrite .= PHP_EOL . 'post data: ' . print_r($post_data, TRUE);
-	        $towrite .= PHP_EOL . 'post-save post ID: ' . print_r($post_id, TRUE);
-			$fp = fopen('group-home-page-save.txt', 'a');
-			fwrite($fp, $towrite);
-			fclose($fp);
-	 		
+	        }	 		
 	 			    
 		}
  
@@ -353,21 +318,19 @@ if ( class_exists( 'BP_Group_Extension' ) ) : // Recommended, to prevent problem
          */
         function display() {
 
-		    $custom_front_query = cc_get_group_home_page_post();
+		    $custom_front_query = cc_get_group_home_page_post( $group_id );
 
 			while ( $custom_front_query->have_posts() ) :
-					$custom_front_query->the_post(); ?>
-					<article id="post-<?php the_ID(); ?>" <?php post_class( 'clear' ); ?>>
-						<!-- <h1 class="entry-title"><?php the_title(); ?></h1> -->
-						<div class="entry-content">
-							<?php the_content(); ?>
-						</div><!-- .entry-content -->
-					</article><!-- #post -->
+				$custom_front_query->the_post(); ?>
+				<article id="post-<?php the_ID(); ?>" <?php post_class( 'clear' ); ?>>
+					<!-- <h1 class="entry-title"><?php the_title(); ?></h1> -->
+					<div class="entry-content">
+						<?php the_content(); ?>
+					</div><!-- .entry-content -->
+				</article><!-- #post -->
 
 			<?php
-					// $meta = get_post_meta( get_the_ID(),'group_home_page_association',false );
-					//print_r($meta);
-				endwhile;           
+			endwhile;           
         }
  
         /**
@@ -383,15 +346,15 @@ if ( class_exists( 'BP_Group_Extension' ) ) : // Recommended, to prevent problem
          * <a href="http://buddypress.org/community/members/param/" rel="nofollow">@param</a> int $group_id The numeric ID of the group being edited. Use
          *   this id to pull up any relevant metadata
          *
-         * NOT USED
          */
-        function admin_screen( $group_id ) {
-            ?>
- 
-            <p>The HTML for my admin panel.</p>
- 
-            <?php
-        }
+        // We're using the fallback method setting_screen, but may use this later.
+        // function admin_screen( $group_id ) {
+        //     if ( cc_home_page_enabled_for_group( $group_id ) ){
+        //      	echo '<p>This group has a custom home page.</p>';
+        //     } else {
+        //      	echo '<p>This group <strong>does not</strong> have a custom home page.</p>';
+        //     };
+        // }
  
         /**
          * The routine run after the group is saved on the Dashboard group admin screen
@@ -399,19 +362,20 @@ if ( class_exists( 'BP_Group_Extension' ) ) : // Recommended, to prevent problem
          * <a href="http://buddypress.org/community/members/param/" rel="nofollow">@param</a> int $group_id The numeric ID of the group being edited. Use
          *   this id to pull up any relevant metadata
          */
-        function admin_screen_save( $group_id ) {
+        // We're using the fallback method setting_screen_save, but may use this later.
+        // function admin_screen_save( $group_id ) {
             // Grab your data out of the $_POST global and save as necessary
-        }
+        // }
  
-        function widget_display() { ?>
-            <div class="info-group">
+        // function widget_display() { ?>
+            <!-- <div class="info-group">
                 <h4><?php echo esc_attr( $this->name ) ?></h4>
                 <p>
                     You could display a small snippet of information from your group extension here. It will show on the group home screen.
                 </p>
-            </div>
+            </div> -->
             <?php
-        }
+        // }
 
     }
  
@@ -440,11 +404,11 @@ function cc_home_page_enabled_for_group( $group_id ) {
 	// global $bp;
 	$setting = false;
 
-	if ( bp_is_group() ) {
+	// if ( bp_is_group() ) {
     
 	    // $visible = $bp->groups->current_group->is_visible;
 
-	    $custom_front_query = cc_get_group_home_page_post();
+	    $custom_front_query = cc_get_group_home_page_post( $group_id );
 	    // $towrite = PHP_EOL . 'group_id: ' . print_r($group_id, TRUE);
 	    // $towrite .= PHP_EOL . 'visible: ' . print_r($visible, TRUE);
 	    // $towrite .= PHP_EOL . 'custom front query: ' . print_r( $custom_front_query->have_posts(), TRUE);
@@ -456,12 +420,12 @@ function cc_home_page_enabled_for_group( $group_id ) {
 		// $fp = fopen('group_has_front_page_check.txt', 'a');
 		// fwrite($fp, $towrite);
 		// fclose($fp);
-	}
+	// }
 
 	return apply_filters('cc_home_page_enabled_for_group', $setting);
 }
 
-function cc_get_group_home_page_post( $status = null ) {
+function cc_get_group_home_page_post( $group_id, $status = null ) {
 
 	$args =  array(
        'post_type'   => 'group_home_page',
@@ -470,7 +434,7 @@ function cc_get_group_home_page_post( $status = null ) {
        'meta_query'  => array(
                            array(
                             'key'           => 'group_home_page_association',
-                            'value'         => bp_get_current_group_id(),
+                            'value'         => $group_id,
                             'compare'       => '=',
                             'type'          => 'NUMERIC'
                             )
@@ -499,22 +463,8 @@ function obliterate_caps( $primitive_caps, $meta_cap, $user_id, $args ) {
 	return $primitive_caps;
 	// For some reason, if the caps aren't being obliterated, the images in the gallery aren't being shown. Must be yet another caps thing.
 }
-// add_filter( 'map_meta_cap', 'obliterate_caps_for_media_modal', 12, 4 );
-function obliterate_caps_for_media_modal( $primitive_caps, $meta_cap, $user_id, $args ) {	
 
-	if ( ( isset( $_POST['action'] ) && $_POST['action'] == 'upload-attachment' ) || ( isset( $_POST['action'] ) && $_POST['action'] == 'query-attachments' ) ) {
-
-		if ( !in_array( $meta_cap, array( 'upload_files','edit_post','delete_post' ) ) ) {  
-	        return $primitive_caps;  
-	    }
-
-	    $primitive_caps = array();
-	}
-
-	return $primitive_caps;
-}
-
-//This enables the media button on the post edit form
+// This enables the media button on the post edit form
 add_filter( 'map_meta_cap', 'cc_group_home_setup_map_meta_cap', 14, 4 );
 function cc_group_home_setup_map_meta_cap( $primitive_caps, $meta_cap, $user_id, $args ) {	
 
@@ -531,6 +481,9 @@ function cc_group_home_setup_map_meta_cap( $primitive_caps, $meta_cap, $user_id,
 		// || ( isset( $_POST['action'] ) && $_POST['action'] == 'query-attachments' )
 		) {
 
+		// Put the filter back before any possible return
+		add_filter('bp_current_action', 'group_hierarchy_override_current_action');
+
 		if ( !in_array( $meta_cap, array( 'upload_files','edit_post' ) ) ) {  
 	        return $primitive_caps;  
 	    }
@@ -538,6 +491,8 @@ function cc_group_home_setup_map_meta_cap( $primitive_caps, $meta_cap, $user_id,
 	    $primitive_caps = array();
 	}
 
+	// Put the filter back before any possible return
+	add_filter('bp_current_action', 'group_hierarchy_override_current_action');
 	return $primitive_caps;
 }
 
@@ -558,6 +513,7 @@ function group_home_show_users_own_attachments( $wp_query_obj ) {
 	// }
 
 }
+
 // add_filter( 'posts_where', 'devplus_attachments_wpquery_where' );
 function devplus_attachments_wpquery_where( $where ){
 	global $current_user;
@@ -574,25 +530,3 @@ function devplus_attachments_wpquery_where( $where ){
 
 	return $where;
 }
-
-// add_filter( 'map_meta_cap', 'testing_bp_hierarchy', 8, 4 );
-// function testing_bp_hierarchy( $primitive_caps, $meta_cap, $user_id, $args ) {	
-
-// 	remove_filter('bp_current_action', 'group_hierarchy_override_current_action_dc');
-
-// 	// Only do this when on the group admin's group home edit page
-// 	if( ( bp_is_current_component( 'groups' ) && bp_is_current_action( 'admin' ) &&  bp_is_action_variable( 'group-home', 0 ) )
-// 		|| ( isset( $_POST['action'] ) && $_POST['action'] == 'upload-attachment' )
-// 		// Could possibly restrict this further by checking that $_POST['post_id'] is a group home type post
-// 		// || ( isset( $_POST['action'] ) && $_POST['action'] == 'query-attachments' )
-// 		) {
-
-// 		if ( !in_array( $meta_cap, array( 'upload_files','edit_post' ) ) ) {  
-// 	        return $primitive_caps;  
-// 	    }
-
-// 	    $primitive_caps = array();
-// 	}
-
-// 	return $primitive_caps;
-// }
