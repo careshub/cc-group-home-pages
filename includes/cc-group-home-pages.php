@@ -317,6 +317,9 @@ if ( class_exists( 'BP_Group_Extension' ) ) : // Recommended, to prevent problem
          * Use this function to display the actual content of your group extension when the nav item is selected
          */
         function display() {
+        	if ( !isset( $group_id ) ) {
+	    		$group_id = bp_get_current_group_id();
+	    	} 
 
 		    $custom_front_query = cc_get_group_home_page_post( $group_id );
 
