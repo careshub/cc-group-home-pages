@@ -441,54 +441,44 @@ function cc_get_group_home_page_post( $group_id, $status = null ) {
     return $custom_front_query;
 }
 
-// add_filter( 'map_meta_cap', 'obliterate_caps', 16, 4 );
-function obliterate_caps( $primitive_caps, $meta_cap, $user_id, $args ) {	
-
-		$towrite = PHP_EOL . 'primitive caps: ' . print_r( $primitive_caps, TRUE);
-		$towrite .= PHP_EOL . 'meta cap: ' . print_r( $meta_cap, TRUE);
-		$fp = fopen('cap_checks_group_home_page.txt', 'a');
-		fwrite($fp, $towrite);
-		fclose($fp);
-
-		if ( !in_array( $meta_cap, array( 'upload_files','edit_post','delete_post' ) ) ) {  
-	        return $primitive_caps;  
-	    }
-
-	    $primitive_caps = array();
-
-	return $primitive_caps;
-	// For some reason, if the caps aren't being obliterated, the images in the gallery aren't being shown. Must be yet another caps thing.
+add_action('bp_init','add_mmc_filter');
+function add_mmc_filter() {
+      if( ( bp_is_current_component( 'groups' ) && bp_is_current_action( 'admin' ) &&          bp_is_action_variable( 'group-home', 0 ) ) 
+      	|| ( isset( $_POST['action'] ) && $_POST['action'] == 'upload-attachment' )
+      	) {
+            add_filter( 'map_meta_cap', 'cc_group_home_setup_map_meta_cap', 14, 4 );
+      }
 }
 
 // This enables the media button on the post edit form
-add_filter( 'map_meta_cap', 'cc_group_home_setup_map_meta_cap', 14, 4 );
+// add_filter( 'map_meta_cap', 'cc_group_home_setup_map_meta_cap', 14, 4 );
 function cc_group_home_setup_map_meta_cap( $primitive_caps, $meta_cap, $user_id, $args ) {	
 
 	// In order to upload files, a user needs to have caps for uploading and editing posts. 
 	// We reset the "required" caps by blanking the array for those caps.
 
 	// First we have to tell BP Group Hierarchy to not try to overwrite this action
-	remove_filter('bp_current_action', 'group_hierarchy_override_current_action');
+	// remove_filter('bp_current_action', 'group_hierarchy_override_current_action');
 
 	// Only do this when on the group admin's group home edit page
-	if( ( bp_is_current_component( 'groups' ) && bp_is_current_action( 'admin' ) &&  bp_is_action_variable( 'group-home', 0 ) )
-		|| ( isset( $_POST['action'] ) && $_POST['action'] == 'upload-attachment' )
-		// Could possibly restrict this further by checking that $_POST['post_id'] is a group home type post
-		// || ( isset( $_POST['action'] ) && $_POST['action'] == 'query-attachments' )
-		) {
+	// if( ( bp_is_current_component( 'groups' ) && bp_is_current_action( 'admin' ) &&  bp_is_action_variable( 'group-home', 0 ) )
+	// 	|| ( isset( $_POST['action'] ) && $_POST['action'] == 'upload-attachment' )
+	// 	// Could possibly restrict this further by checking that $_POST['post_id'] is a group home type post
+	// 	// || ( isset( $_POST['action'] ) && $_POST['action'] == 'query-attachments' )
+	// 	) {
 
 		// Put the filter back before any possible return
-		add_filter('bp_current_action', 'group_hierarchy_override_current_action');
+		// add_filter('bp_current_action', 'group_hierarchy_override_current_action');
 
 		if ( !in_array( $meta_cap, array( 'upload_files','edit_post' ) ) ) {  
 	        return $primitive_caps;  
 	    }
 
 	    $primitive_caps = array();
-	}
+	// }
 
 	// Put the filter back before any possible return
-	add_filter('bp_current_action', 'group_hierarchy_override_current_action');
+	// add_filter('bp_current_action', 'group_hierarchy_override_current_action');
 	return $primitive_caps;
 }
 
@@ -508,21 +498,4 @@ function group_home_show_users_own_attachments( $wp_query_obj ) {
 		}
 	// }
 
-}
-
-// add_filter( 'posts_where', 'devplus_attachments_wpquery_where' );
-function devplus_attachments_wpquery_where( $where ){
-	global $current_user;
-
-	if( is_user_logged_in() ){
-		// we spreken over een ingelogde user
-		if( isset( $_POST['action'] ) ){
-			// library query
-			if( $_POST['action'] == 'query-attachments' ){
-				$where .= ' AND post_author='.$current_user->data->ID;
-			}
-		}
-	}
-
-	return $where;
 }
