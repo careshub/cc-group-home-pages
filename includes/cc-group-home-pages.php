@@ -7,7 +7,7 @@
 // 	1. Add the "home" page if one exists, move "Activity" to its own tab
 //////////////////////
 //////////////////////
-// add_action( 'bp_actions', 'cc_add_group_activity_tab', 8 );
+add_action( 'bp_actions', 'cc_add_group_activity_tab', 8 );
 
 function cc_add_group_activity_tab() {
 	  // Only check if we're on a group page
@@ -18,24 +18,24 @@ function cc_add_group_activity_tab() {
 	  // Only add the "Home" tab if the group has a custom front page, so check for an associated post. 
 	  // Only add the new "Activity" tab if the group is visible to the user.
 	  // Todo this will fail if a page is associated to multiple groups.
-	    // $group_id = $bp->groups->current_group->id ;
-	    // $visible = $bp->groups->current_group->is_visible ;
-	    // $args =  array(
-	    //    'post_type'   => 'group_home_page',
-	    //    'posts_per_page' => '1',
-	    //    'meta_query'  => array(
-	    //                        array(
-	    //                         'key'           => 'group_home_page_association',
-	    //                         'value'         => $group_id,
-	    //                         'compare'       => '=',
-	    //                         'type'          => 'NUMERIC'
-	    //                         )
-	    //                     )
-	    // ); 
-	    // $custom_front_query = new WP_Query( $args );
+	    $group_id = $bp->groups->current_group->id ;
+	    $visible = $bp->groups->current_group->is_visible ;
+	    $args =  array(
+	       'post_type'   => 'group_home_page',
+	       'posts_per_page' => '1',
+	       'meta_query'  => array(
+	                           array(
+	                            'key'           => 'group_home_page_association',
+	                            'value'         => $group_id,
+	                            'compare'       => '=',
+	                            'type'          => 'NUMERIC'
+	                            )
+	                        )
+	    ); 
+	    $custom_front_query = new WP_Query( $args );
 
 	  	// TODO New approach: don't move activity, just rename "Home" to "Activity" using a language file, then create the new tab to show the group home page when appropriate. Yah?
-	    // if( $custom_front_query->have_posts() && $visible ) { 
+	    if( $custom_front_query->have_posts() ) { 
 	      bp_core_new_subnav_item( 
 	        array( 
 	          'name' => 'Activity', 
@@ -53,7 +53,7 @@ function cc_add_group_activity_tab() {
 	        add_action( 'bp_template_content_header', create_function( '', 'echo "' . esc_attr( 'Activity' ) . '";' ) );
 	        add_action( 'bp_template_title', create_function( '', 'echo "' . esc_attr( 'Activity' ) . '";' ) );
 	      } // END if ( bp_is_current_action( 'activity' ) ) 
-	    // } // END if( $custom_front_query->have_posts() )
+	    } // END if( $custom_front_query->have_posts() )
 	  } //END if( bp_is_group() )
 	}
 
@@ -197,10 +197,13 @@ if ( class_exists( 'BP_Group_Extension' ) ) : // Recommended, to prevent problem
 			$args = array(
 	            	'slug'              => 'group-home',
 	           		'name'              => 'Group Home',
-	           		'visibility'        => 'public',
+	           		'visibility'        => 'public', //maybe only applies to public groups?
+	           		// 'who_can_visit'		=> 'anyone', //anyone, logged-in, or member; member is default.
+	           		'access_private_group' => 'anyone',
+	           		// 'access_public_group'	=> 'anyone',
 	           		'nav_item_position' => 1,
 	           		//Todo: Currently using the "home" tab to display via templates.
-	           		'enable_nav_item'   => cc_home_page_enabled_for_group( bp_get_current_group_id() ),
+	           		'enable_nav_item'   => false,//cc_home_page_enabled_for_group( bp_get_current_group_id() ),
 	           		'screens' => array(
 		                'edit' => array(
 		                    'name' => 'Group Home Page',
@@ -383,7 +386,7 @@ endif; // class_exists( 'BP_Group_Extension' )
 ////////////////////////////////
 ////////////////////////////////
 
-add_filter('bp_groups_default_extension','cc_change_group_default_tab');
+// add_filter('bp_groups_default_extension','cc_change_group_default_tab');
  
 function cc_change_group_default_tab( $default_tab ){
  	// Get the current group id.
@@ -498,4 +501,13 @@ function group_home_show_users_own_attachments( $wp_query_obj ) {
 		}
 	// }
 
+}
+
+// add_filter( 'bp_groups_access_exemption', 'enable_group_home_access', 35 );
+function enable_group_home_access( $setting ) {
+	if ( bp_is_current_action('group-home') ) {
+		return true;
+	} else {
+		return $setting;
+	}
 }
