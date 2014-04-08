@@ -243,6 +243,7 @@ if ( class_exists( 'BP_Group_Extension' ) ) : // Recommended, to prevent problem
 					$custom_front_query->the_post(); 
 					$post_content = get_the_content();
 					$post_id = get_the_ID();
+					$post_published = get_post_status( $post_id );
 
 				endwhile; 	
 
@@ -256,6 +257,15 @@ if ( class_exists( 'BP_Group_Extension' ) ) : // Recommended, to prevent problem
 	                    );
 	                    wp_editor( $post_content, 'group_home_page_content', $args); 
 	                ?>
+		            <p>
+			            <label for="cc_group_home_published">Published Status</label>
+				        <select name="cc_group_home_published" id="cc_group_home_published">
+				            <option <?php selected( $post_published, "publish" ); ?> value="publish">Published</option>
+				            <option <?php selected( $post_published, "draft" ); 
+				                if ( empty( $post_published ) ) { echo 'selected="selected"' ; } 
+				                ?> value="draft">Draft</option>
+				        </select>
+				    </p>
 	                <input type="hidden" name="group_home_page_post_id" value="<?php echo $post_id; ?>">
 	                <?php
 
@@ -275,13 +285,15 @@ if ( class_exists( 'BP_Group_Extension' ) ) : // Recommended, to prevent problem
 
 	    		// Get group name to use for title
 	    		$current_group = groups_get_group( array( 'group_id' => $group_id ) );
+	    		//Get the selected "published" status
+    		    $published_status = in_array( $_POST['cc_group_home_published'], array( 'publish', 'draft' ) ) ? $_POST['cc_group_home_published'] : 'draft';
 
 		    	// Some defaults
 				$post_data = array(
-	                'post_content' => $_POST['group_home_page_content'],
 	                'post_type' => 'group_home_page',
-	                'post_status' => 'publish',
 	                'post_title' => $current_group->name,
+   	                'post_content' => $_POST['group_home_page_content'],
+                    'post_status' => $published_status,
 	                'comment_status' => 'closed'
 	            );
 
