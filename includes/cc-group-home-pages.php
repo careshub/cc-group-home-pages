@@ -324,8 +324,9 @@ if ( class_exists( 'BP_Group_Extension' ) ) : // Recommended, to prevent problem
 					// Something went wrong
 					bp_core_add_message( 'We couldn\'t update the group home page at this time.', 'error' );
 				}
-	        }	 		
-	 			    
+	        }	 
+
+	        bp_core_redirect( bp_get_group_permalink( groups_get_group( array( 'group_id' => $group_id ) ) ) . 'admin/' . $this->slug ); 			    
 		}
  
         /**
