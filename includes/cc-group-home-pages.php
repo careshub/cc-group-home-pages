@@ -10,9 +10,11 @@
 add_action( 'bp_actions', 'cc_add_group_activity_tab', 8 );
 
 function cc_add_group_activity_tab() {
-	  // Only check if we're on a group page
-	  if( bp_is_group() ) { 
-	  	$bp = buddypress();
+	  // Only continue if we're on a group page
+	  if( ! bp_is_group() )
+	  	return false;
+
+	  $bp = buddypress();
 
 
 	  // Only add the "Home" tab if the group has a custom front page, so check for an associated post. 
@@ -54,7 +56,6 @@ function cc_add_group_activity_tab() {
 	        add_action( 'bp_template_title', create_function( '', 'echo "' . esc_attr( 'Activity' ) . '";' ) );
 	      } // END if ( bp_is_current_action( 'activity' ) ) 
 	    } // END if( $custom_front_query->have_posts() )
-	  } //END if( bp_is_group() )
 	}
 
 //  2. Create Group Home Page custom post type and needed meta boxes
@@ -208,9 +209,6 @@ if ( class_exists( 'BP_Group_Extension' ) ) : // Recommended, to prevent problem
 		                'edit' => array(
 		                    'name' => 'Group Home Page',
 		                    'enabled' => true,
-		                    // Changes the text of the Submit button
-		                    // on the Edit page
-		                    // 'submit_text' => 'Submit, suckaz',
 		                ),
 		                'create' => array(
 		                    'enabled' => false,
@@ -246,6 +244,7 @@ if ( class_exists( 'BP_Group_Extension' ) ) : // Recommended, to prevent problem
 					$post_published = get_post_status( $post_id );
 
 				endwhile; 	
+				// echo $post_content;
 
 	                $args = array(
 	                        // 'textarea_rows' => 100,
@@ -278,57 +277,20 @@ if ( class_exists( 'BP_Group_Extension' ) ) : // Recommended, to prevent problem
 	     * settings from the edit, create, and Dashboard admin panels
 	     */
 	    function settings_screen_save( $group_id ) {
-
-	    	// If the page is new, $_POST['create_a_group_home_page'] will be set
-	    	// If the page already exists, $_POST['group_home_page_content'] will be set
-	    	if ( isset( $_POST['group_home_page_content'] ) || isset( $_POST['create_a_group_home_page'] ) ) {
-
-	    		// Get group name to use for title
-	    		$current_group = groups_get_group( array( 'group_id' => $group_id ) );
-	    		//Get the selected "published" status
-    		    $published_status = in_array( $_POST['cc_group_home_published'], array( 'publish', 'draft' ) ) ? $_POST['cc_group_home_published'] : 'draft';
-
-		    	// Some defaults
-				$post_data = array(
-	                'post_type' => 'group_home_page',
-	                'post_title' => $current_group->name,
-   	                'post_content' => $_POST['group_home_page_content'],
-                    'post_status' => $published_status,
-	                'comment_status' => 'closed'
-	            );
-
-		        // Does a post already exist?
-	   	        if ( isset( $_POST['group_home_page_post_id'] ) && is_numeric( $_POST['group_home_page_post_id'] ) ) {
-	   	        	$post_data['ID'] = $_POST['group_home_page_post_id'];
-	   	        } else {
-	   	        	//If this is a new post, we'll add an author id.
-	   	        	$post_data['post_author'] = get_current_user_id();
-	   	        }
-
-	   			// $towrite = PHP_EOL . print_r($post_data, TRUE);
-				// $fp = fopen('creating_group_home_page.txt', 'a');
-				// fwrite($fp, $towrite);
-				// fclose($fp);
-
-	        	// Save the post
-	            $post_id = wp_insert_post($post_data);
-
-	        	// If the post save was successful, save the postmeta
-	            if ( $post_id ) {
-		            // Associate the post with the group
-					update_post_meta( $post_id, 'group_home_page_association', $group_id, false );
-					// Add a success message
-					bp_core_add_message( 'Group home page was successfully updated.', 'success' );
-
-				} else {
-					// Something went wrong
-					bp_core_add_message( 'We couldn\'t update the group home page at this time.', 'error' );
-				}
-	        }	 
-
+	    	// Use shared routine
+	    	$this->cc_group_home_save_routine( $group_id );		    
+		}
+ 		
+	    /**
+	     * edit_screen_save() is more specific and only used on the front end edit tab
+	     */
+	    function edit_screen_save( $group_id ) {
+	    	// Use shared routine
+	    	$this->cc_group_home_save_routine( $group_id );
+	    	
 	        bp_core_redirect( bp_get_group_permalink( groups_get_group( array( 'group_id' => $group_id ) ) ) . 'admin/' . $this->slug ); 			    
 		}
- 
+
         /**
          * Use this function to display the actual content of your group extension when the nav item is selected
          */
@@ -389,6 +351,55 @@ if ( class_exists( 'BP_Group_Extension' ) ) : // Recommended, to prevent problem
         // function widget_display() {
         // }
 
+        public function cc_group_home_save_routine( $group_id ) {
+        	// If the page is new, $_POST['create_a_group_home_page'] will be set
+	    	// If the page already exists, $_POST['group_home_page_content'] will be set
+	    	if ( isset( $_POST['group_home_page_content'] ) || isset( $_POST['create_a_group_home_page'] ) ) {
+
+	    		// Get group name to use for title
+	    		$current_group = groups_get_group( array( 'group_id' => $group_id ) );
+	    		//Get the selected "published" status
+    		    $published_status = in_array( $_POST['cc_group_home_published'], array( 'publish', 'draft' ) ) ? $_POST['cc_group_home_published'] : 'draft';
+
+		    	// Some defaults
+				$post_data = array(
+	                'post_type' => 'group_home_page',
+	                'post_title' => $current_group->name,
+   	                'post_content' => $_POST['group_home_page_content'],
+                    'post_status' => $published_status,
+	                'comment_status' => 'closed'
+	            );
+
+		        // Does a post already exist? TODO: Trust this or check it via a meta query?
+	   	        if ( isset( $_POST['group_home_page_post_id'] ) && is_numeric( $_POST['group_home_page_post_id'] ) ) {
+	   	        	$post_data['ID'] = $_POST['group_home_page_post_id'];
+	   	        } else {
+	   	        	//If this is a new post, we'll add an author id.
+	   	        	$post_data['post_author'] = get_current_user_id();
+	   	        }
+
+	   			// $towrite = PHP_EOL . print_r($post_data, TRUE);
+				// $fp = fopen('creating_group_home_page.txt', 'a');
+				// fwrite($fp, $towrite);
+				// fclose($fp);
+
+	        	// Save the post
+	            $post_id = wp_insert_post($post_data);
+
+	        	// If the post save was successful, save the postmeta
+	            if ( $post_id ) {
+		            // Associate the post with the group
+					update_post_meta( $post_id, 'group_home_page_association', $group_id, false );
+					// Add a success message
+					bp_core_add_message( 'Group home page was successfully updated.', 'success' );
+
+				} else {
+					// Something went wrong
+					bp_core_add_message( 'We couldn\'t update the group home page at this time.', 'error' );
+				}
+	        }	
+        }
+
     }
  
     bp_register_group_extension( 'CC_Group_Home_Page_Extension' );
@@ -437,7 +448,8 @@ function cc_home_page_enabled_for_group( $group_id ) {
 	return apply_filters('cc_home_page_enabled_for_group', $setting);
 }
 
-function cc_get_group_home_page_post( $group_id, $status = null ) {
+function cc_get_group_home_page_post( $group_id = null, $status = null ) {
+	$group_id = ( $group_id ) ? $group_id : bp_get_current_group_id();
 
 	$args =  array(
        'post_type'   => 'group_home_page',
