@@ -224,7 +224,7 @@ if ( class_exists( 'BP_Group_Extension' ) ) : // Recommended, to prevent problem
 	     * settings_screen() is the catch-all method for displaying the content 
 	     * of the edit, create, and Dashboard admin panels
 	     */
-	    function settings_screen( $group_id ) {
+	    function settings_screen( $group_id = 0 ) {
 
 	        $custom_front_query = cc_get_group_home_page_post( $group_id, 'draft' );
 	        // print_r($custom_front_query->posts);
@@ -276,7 +276,7 @@ if ( class_exists( 'BP_Group_Extension' ) ) : // Recommended, to prevent problem
 	     * settings_screen_save() contains the catch-all logic for saving 
 	     * settings from the edit, create, and Dashboard admin panels
 	     */
-	    function settings_screen_save( $group_id ) {
+	    function settings_screen_save( $group_id = 0 ) {
 	    	// Use shared routine
 	    	$this->cc_group_home_save_routine( $group_id );		    
 		}
@@ -284,7 +284,7 @@ if ( class_exists( 'BP_Group_Extension' ) ) : // Recommended, to prevent problem
 	    /**
 	     * edit_screen_save() is more specific and only used on the front end edit tab
 	     */
-	    function edit_screen_save( $group_id ) {
+	    function edit_screen_save( $group_id = 0 ) {
 	    	// Use shared routine
 	    	$this->cc_group_home_save_routine( $group_id );
 	    	
@@ -471,7 +471,7 @@ function cc_get_group_home_page_post( $group_id = null, $status = null ) {
 
 add_action('bp_init','add_mmc_filter');
 function add_mmc_filter() {
-      if( ( bp_is_current_component( 'groups' ) && bp_is_current_action( 'admin' ) &&          bp_is_action_variable( 'group-home', 0 ) ) 
+      if( ( bp_is_current_component( 'groups' ) && bp_is_current_action( 'admin' ) && bp_is_action_variable( 'group-home', 0 ) ) 
       	|| ( isset( $_POST['action'] ) && $_POST['action'] == 'upload-attachment' )
       	) {
             add_filter( 'map_meta_cap', 'cc_group_home_setup_map_meta_cap', 14, 4 );
@@ -479,9 +479,7 @@ function add_mmc_filter() {
 }
 
 // This enables the media button on the post edit form
-// add_filter( 'map_meta_cap', 'cc_group_home_setup_map_meta_cap', 14, 4 );
 function cc_group_home_setup_map_meta_cap( $primitive_caps, $meta_cap, $user_id, $args ) {	
-
 	// In order to upload files, a user needs to have caps for uploading and editing posts. 
 	// We reset the "required" caps by blanking the array for those caps.
 
