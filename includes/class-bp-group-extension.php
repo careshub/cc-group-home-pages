@@ -16,8 +16,11 @@
 
         function __construct() {
 
+        	// Instantiate the main class so we can get the slug
+        	$ccgph_class = CC_BPGHP::get_instance();
+			
 			$args = array(
-	            	'slug'              => 'group-home',
+	            	'slug'              => $ccgph_class->get_plugin_slug(),
 	           		'name'              => 'Group Home',
 	           		'visibility'        => 'public', // maybe only applies to public groups?
 	           		'access'			=> 'anyone', // BP 2.1

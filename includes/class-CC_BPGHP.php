@@ -100,7 +100,7 @@ class CC_BPGHP {
 		add_action( 'bp_actions', array( $this, 'add_group_activity_tab' ), 8 );
 
 		/* Filter "map_meta_caps" to let our users do things they normally can't. */
-		add_action( 'bp_init', array( $this, 'add_mmc_filter') );
+		// add_action( 'bp_init', array( $this, 'add_mmc_filter') );
 
 		/* Don't interpret shortcodes on the group home page edit screen. */
 		add_action( 'bp_init', array( $this, 'remove_shortcode_filter_on_settings_screen') );
@@ -320,7 +320,7 @@ class CC_BPGHP {
 	 	// Get the current group id.
 		if ( $group_id = bp_get_current_group_id() ) {
 
-			$default_tab = ( ccghp_enabled_for_group( $group_id ) ? 'group-home' : $default_tab );
+			$default_tab = ( ccghp_enabled_for_group( $group_id ) ? $this->plugin_slug : $default_tab );
 		 
 		}
 		 
@@ -510,7 +510,7 @@ class CC_BPGHP {
 	 * @since    1.0.0
 	 */
 	public function add_mmc_filter() {
-		if( ( bp_is_current_component( 'groups' ) && bp_is_current_action( 'admin' ) && bp_is_action_variable( 'group-home', 0 ) ) 
+		if( ( bp_is_current_component( 'groups' ) && bp_is_current_action( 'admin' ) && bp_is_action_variable( $this->plugin_slug, 0 ) ) 
 			|| ( isset( $_POST['action'] ) && $_POST['action'] == 'upload-attachment' )
 			) {
 		    add_filter( 'map_meta_cap', array( $this, 'setup_map_meta_cap' ), 14, 4 );
