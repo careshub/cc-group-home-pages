@@ -99,8 +99,8 @@ class CC_BPGHP {
 		/* Add a tab to house the group activity, since we're using "Home" for the group home page. */
 		add_action( 'bp_actions', array( $this, 'add_group_activity_tab' ), 8 );
 
-		/* Filter "map_meta_caps" to let our users do things they normally can't. */
-		// add_action( 'bp_init', array( $this, 'add_mmc_filter') );
+		/* Filter "map_meta_caps" to let our users do things they normally can't, like upload media */
+		add_action( 'bp_init', array( $this, 'add_mmc_filter') );
 
 		/* Don't interpret shortcodes on the group home page edit screen. */
 		add_action( 'bp_init', array( $this, 'remove_shortcode_filter_on_settings_screen') );
@@ -524,13 +524,19 @@ class CC_BPGHP {
 	 * @since    1.0.0
 	 */
 	public function setup_map_meta_cap( $primitive_caps, $meta_cap, $user_id, $args ) {	
-		// In order to upload files, a user needs to have caps for uploading and editing posts.
+		// In order to upload media, a user needs to have caps.
 		// Check if this is a request we want to filter. 
-		if ( ! in_array( $meta_cap, array( 'upload_files','edit_post' ) ) ) {  
+		if ( ! in_array( $meta_cap, array( 'upload_files', 'edit_post', 'delete_post' ) ) ) {  
 	        return $primitive_caps;  
 	    }
 
-	  	// We reset the "required" caps by blanking the array for those caps.
+		// It would be useful for a user to be able to delete her own uploaded media.
+	    // If this is someone else's post, we don't want to allow deletion of that, though.
+	    if ( $meta_cap == 'delete_post' && in_array( 'delete_others_posts', $primitive_caps ) ) {
+	        return $primitive_caps;  
+	    }
+
+	  	// We pass a blank array back, meaning there's no capability required.
 	    $primitive_caps = array();
 
 		return $primitive_caps;
