@@ -21,17 +21,13 @@
 			
 			$args = array(
 	            	'slug'              => $ccgph_class->get_plugin_slug(),
-	           		'name'              => 'Group Home',
-	           		'visibility'        => 'public', // maybe only applies to public groups?
+	           		'name'              => 'Hub Home',
 	           		'access'			=> 'anyone', // BP 2.1
-	           		'show_tab'			=> 'anyone', // BP 2.1
-
+	           		'show_tab'			=> ccghp_enabled_for_group( bp_get_current_group_id() ) ? 'anyone' : 'noone', // BP 2.1
 	           		'nav_item_position' => 1,
-	           		//TODO: Currently using the "home" tab to display via templates.
-	           		'enable_nav_item'   => false, //ccghp_enabled_for_group( bp_get_current_group_id() ),
 	           		'screens' => array(
 		                'edit' => array(
-		                    'name' => 'Group Home Page',
+		                    'name' => 'Hub Home Page',
 		                    'enabled' => true,
 		                ),
 		                'create' => array(
@@ -70,11 +66,6 @@
 					$post_published = get_post_status( $post_id );
 
 				endwhile; 	
-				// echo $post_content;
-			    // $towrite .= PHP_EOL . '$content as sent to editor: ' . print_r($post_content, TRUE);
-			    // $fp = fopen('editor_work.txt', 'a');
-			    // fwrite($fp, $towrite);
-			    // fclose($fp);
 
 	                $args = array(
 	                        // 'textarea_rows' => 100,

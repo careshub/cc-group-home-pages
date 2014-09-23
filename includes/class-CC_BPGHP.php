@@ -94,10 +94,10 @@ class CC_BPGHP {
 		 * Set the group home page as the default page if one exists.
 		 * TODO: after BP 2.1 we can use this, I think.
 		 */
-		// add_filter( 'bp_groups_default_extension', array( $this, 'change_group_default_tab' ) );
+		add_filter( 'bp_groups_default_extension', array( $this, 'change_group_default_tab' ) );
 
 		/* Add a tab to house the group activity, since we're using "Home" for the group home page. */
-		add_action( 'bp_actions', array( $this, 'add_group_activity_tab' ), 8 );
+		// add_action( 'bp_actions', array( $this, 'add_group_activity_tab' ), 8 );
 
 		/* Filter "map_meta_caps" to let our users do things they normally can't, like upload media */
 		add_action( 'bp_init', array( $this, 'add_mmc_filter') );
@@ -107,10 +107,6 @@ class CC_BPGHP {
 
 		/* Only allow users to see their own items in the media library uploader. */
 		add_action( 'pre_get_posts', array( $this, 'show_users_own_attachments') );
-
-
-
-
 
 	}
 
