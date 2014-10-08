@@ -50,6 +50,33 @@ function cc_get_group_home_page_post( $group_id = null, $status = null ) {
 
     return $custom_front_query;
 }
+/**
+ * Check to see if we're viewing a group's home page. 
+ * 
+ * @since    1.0.0
+ */
+function ccghp_is_group_home_page() {
+    $ccgph_class = CC_BPGHP::get_instance();
+
+    if ( bp_is_groups_component() && bp_is_current_action( $ccgph_class->get_plugin_slug() ) )
+        return true;
+
+    return false;
+}
+/**
+ * Check to see if we're viewing a group's home page setting screen. 
+ * Like: /istanbul-secrets/admin/group-home/
+ * 
+ * @since    1.0.0
+ */
+function ccghp_is_settings_screen() {
+    $ccgph_class = CC_BPGHP::get_instance();
+
+    if ( bp_is_groups_component() && bp_is_current_action( 'admin' ) && bp_is_action_variable( $ccgph_class->get_plugin_slug(), 0 ) )
+        return true;
+
+    return false;
+}
 
 
 ////////////////
@@ -75,3 +102,4 @@ function print_filters_for( $hook = null ) {
     echo '</pre>';
     echo '</details>';
 }
+

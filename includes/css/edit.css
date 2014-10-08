@@ -1,0 +1,9 @@
+.wp-editor-wrap {
+	margin-top: 1.8em;
+}
+.wp-editor-container {
+	border: 1px solid #dedede;
+}
+.mce-btn button:hover {
+	border: none;
+}

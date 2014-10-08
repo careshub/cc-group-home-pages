@@ -17,7 +17,7 @@ class CC_BPGHP {
 	 *
 	 * @var     string
 	 */
-	const VERSION = '1.0.0';
+	const VERSION = '1.1.0';
 
 	/**
 	 *
@@ -107,6 +107,15 @@ class CC_BPGHP {
 
 		/* Only allow users to see their own items in the media library uploader. */
 		add_action( 'pre_get_posts', array( $this, 'show_users_own_attachments') );
+
+		// Add styles to the settings screen
+		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_edit_styles' ) );
+
+	    // Change behavior of link button in wp_editor
+	    // First, remove many of the post types from the query
+	    add_filter( 'wp_link_query_args', array( $this, 'limit_link_suggestion_query' ) );
+	    // Add back in docs & group stories
+	    add_filter( 'wp_link_query', array( $this, 'filter_link_suggestions' ), 14, 2 );
 
 	}
 
@@ -295,6 +304,16 @@ class CC_BPGHP {
 	 */
 	public function enqueue_styles() {
 		// wp_enqueue_style( $this->plugin_slug . '-plugin-styles', plugins_url( 'css/aha-extras-tab.css', __FILE__ ), array(), self::VERSION );
+	}
+
+	/**
+	 * Register and enqueue style sheet for edit screen.
+	 *
+	 * @since    1.0.0
+	 */
+	public function enqueue_edit_styles() {
+		if ( ccghp_is_settings_screen() )
+			wp_enqueue_style( $this->plugin_slug . '-edit-screen-styles', plugins_url( 'css/edit.css', __FILE__ ), array(), self::VERSION );
 	}
 
 	/**
@@ -499,7 +518,6 @@ class CC_BPGHP {
 	    }
 	}
 
-
 	/**
 	 * Filter "map_meta_caps" to let our users do things they normally can't.
 	 *
@@ -538,7 +556,6 @@ class CC_BPGHP {
 		return $primitive_caps;
 	}
 
-
 	/**
 	 * Only allow users to see their own items in the media library uploader.
 	 *
@@ -556,8 +573,6 @@ class CC_BPGHP {
 		}
 	}
 
-
-
 	/**
 	 * Don't interpret shortcodes on the group home page edit screen.
 	 *
@@ -569,4 +584,151 @@ class CC_BPGHP {
 		}
 	}
 
+	/**
+	* Change what populates the "link to existing content" box in the wp_editor instance.
+	*
+	* @since 1.1
+	*
+	* @uses apply_filters()
+	* @return string
+	*/
+	function limit_link_suggestion_query( $query ) {
+
+	    // $towrite = PHP_EOL . 'group id: ' . print_r( bp_get_current_group_id(), TRUE );    
+	    // $towrite .= PHP_EOL . 'query, before' .  print_r($query, TRUE);
+ 	   //  $fp = fopen('link-to.txt', 'a');
+	    // fwrite($fp, $towrite);
+	    // fclose($fp);
+
+		if ( ! ccghp_is_settings_screen() )
+			return $query;
+
+	    // Limit the post types that are queried
+	    // We'll want to include bp_docs and group_stories, but they have weird queries (group-related) so we'll add them back in at the 'wp_link_query' filter.
+	    $query['post_type'] = array(); 
+
+   	    // If the search is included in the query, wp will find nothing and things break. Nice.
+   	    if ( isset( $query['s'] ) ) {
+	   	    $query['keyphrase'] = $query['s'];
+	   	    unset( $query['s'] );
+	   	}
+
+   	 //    $towrite .= PHP_EOL . 'query, after' .  print_r($query, TRUE);    
+ 	   //  $fp = fopen('link-to.txt', 'a');
+	    // fwrite($fp, $towrite);
+	    // fclose($fp);
+
+	    return $query;
+	}
+
+	/**
+	* Change what populates the "link to existing content" box in the wp_editor instance.
+	*
+	* @since 1.1
+	*
+	* @uses apply_filters()
+	* @return string
+	*/
+	function filter_link_suggestions( $results, $query ) {
+
+   	    $towrite = PHP_EOL . 'results, before, in suggestions' .  print_r($results, TRUE);    
+   	    $towrite .= PHP_EOL . 'query, in suggestions' .  print_r($query, TRUE);    
+ 	    $fp = fopen('link-to.txt', 'a');
+	    fwrite($fp, $towrite);
+	    fclose($fp);
+
+		if ( ! ccghp_is_settings_screen() )
+			return $results;
+
+   	    $towrite = PHP_EOL . 'passed location test';    
+ 	    $fp = fopen('link-to.txt', 'a');
+	    fwrite($fp, $towrite);
+	    fclose($fp);
+
+		// We're replacing the suggestions, so start with a blank slate.
+		$results = array();
+
+		// Fetch allowable bp_docs, maps, reports
+		$docs = $this->get_shareable_docs();
+		// $maps = ccgn_get_shareable_maps_reports( $group_id = null, $type = 'map' );
+		// $reports = ccgn_get_shareable_maps_reports( $group_id = null, $type = 'report' );
+		$narratives = $this->get_shareable_narratives();
+		$results = array_merge( $docs, $narratives );
+
+		// Sort the results by datetime, descending
+		// Create the sort column array for array_multisort to use
+		foreach ( $results as $key => $value ) {
+		    $datetime[$key]  = $value['datetime'];
+		}
+		// Add $results as the last parameter, to sort by the common key
+		array_multisort( $datetime, SORT_DESC, $results );
+
+		// Oh, handle search terms if included. Not awesome (doesn't search content).
+		if ( isset( $query['keyphrase'] ) ) {
+			$found = array();
+			foreach ($results as $result) {
+				if ( stripos( $result['title'], $query['keyphrase'] ) !== false ) {
+					$found[] = $result;
+				}
+			}
+			$results = $found;
+		}
+
+		// Return the correct records, based on the query.
+		$results = array_slice( $results, $query['offset'], $query['posts_per_page'] );
+
+	    $towrite = PHP_EOL . 'results, after' . print_r($results, TRUE);
+  	    $fp = fopen('link-to.txt', 'a');
+	    fwrite($fp, $towrite);
+	    fclose($fp);
+
+	    return $results;
+	}
+
+	public function get_shareable_docs( $group_id = null ) {
+		$group_id = !( $group_id ) ? bp_get_current_group_id() : $group_id ;
+		$docs_args = array( 'group_id' => $group_id );
+		$good_docs = array();
+
+	    if ( function_exists('bp_docs_has_docs') && bp_docs_has_docs( $docs_args ) ) :
+	        while ( bp_docs_has_docs() ) : 
+	            bp_docs_the_doc();
+	            //Only allow to attach docs that have read set to anyone.
+	            $doc_id = get_the_ID();
+	            $settings = bp_docs_get_doc_settings( $doc_id );
+	            if ( $settings['read'] == 'anyone') { 
+					$good_docs[] = array(
+						'ID' 		=> $doc_id,
+						'title' 	=> get_the_title(),
+						'permalink' => get_the_permalink(),
+						'info' 		=> 'Doc',
+						'datetime'	=> get_the_date('Ymd'),
+						);    
+	            }   
+	        endwhile;
+	    endif;
+
+	    return $good_docs;
+	}
+
+	public function get_shareable_narratives( $group_id = null ) {
+		$group_id = !( $group_id ) ? bp_get_current_group_id() : $group_id ;
+		$narratives = array();
+		$retval = array();
+
+		if ( function_exists('ccgn_get_narratives_for_group') ) {
+			$narratives = ccgn_get_narratives_for_group( $group_id, 'publish' );
+
+		   foreach ($narratives as $narrative) {
+			   	$retval[] = array(
+						'ID' 		=> $narrative->ID,
+						'title' 	=> $narrative->post_title,
+						'permalink' => get_permalink( $narrative->ID ),
+						'info' 		=> 'Hub Narrative',
+						'datetime'	=> date( 'Ymd', strtotime( $narrative->post_date ) ),
+						); 
+		   }
+		}
+		return $retval;
+	}
 } // End class

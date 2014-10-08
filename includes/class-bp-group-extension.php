@@ -71,6 +71,7 @@
 	                        // 'textarea_rows' => 100,
 	                        // 'teeny' => true,
 	                        // 'quicktags' => false
+	                		'tinymce' => true,
 	                		'media_buttons' => true,
 		                	'editor_height' => 360,
 		                	'tabfocus_elements' => 'insert-media-button,save-post',
@@ -90,7 +91,6 @@
 	                <?php
 
 			}
-
 	    }
 	 
 	    /**
@@ -115,7 +115,6 @@
 
         /**
          * Use this function to display the actual content of your group extension when the nav item is selected
-         * TODO: This isn't currently used... The active code is in the theme's buddypress>groups>single>front template.
          */
         function display() {
         	if ( ! isset( $group_id ) ) {
