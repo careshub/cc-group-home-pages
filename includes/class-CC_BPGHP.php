@@ -594,12 +594,6 @@ class CC_BPGHP {
 	*/
 	function limit_link_suggestion_query( $query ) {
 
-	    // $towrite = PHP_EOL . 'group id: ' . print_r( bp_get_current_group_id(), TRUE );    
-	    // $towrite .= PHP_EOL . 'query, before' .  print_r($query, TRUE);
- 	   //  $fp = fopen('link-to.txt', 'a');
-	    // fwrite($fp, $towrite);
-	    // fclose($fp);
-
 		if ( ! ccghp_is_settings_screen() )
 			return $query;
 
@@ -612,11 +606,6 @@ class CC_BPGHP {
 	   	    $query['keyphrase'] = $query['s'];
 	   	    unset( $query['s'] );
 	   	}
-
-   	 //    $towrite .= PHP_EOL . 'query, after' .  print_r($query, TRUE);    
- 	   //  $fp = fopen('link-to.txt', 'a');
-	    // fwrite($fp, $towrite);
-	    // fclose($fp);
 
 	    return $query;
 	}
@@ -631,19 +620,8 @@ class CC_BPGHP {
 	*/
 	function filter_link_suggestions( $results, $query ) {
 
-   	    $towrite = PHP_EOL . 'results, before, in suggestions' .  print_r($results, TRUE);    
-   	    $towrite .= PHP_EOL . 'query, in suggestions' .  print_r($query, TRUE);    
- 	    $fp = fopen('link-to.txt', 'a');
-	    fwrite($fp, $towrite);
-	    fclose($fp);
-
 		if ( ! ccghp_is_settings_screen() )
 			return $results;
-
-   	    $towrite = PHP_EOL . 'passed location test';    
- 	    $fp = fopen('link-to.txt', 'a');
-	    fwrite($fp, $towrite);
-	    fclose($fp);
 
 		// We're replacing the suggestions, so start with a blank slate.
 		$results = array();
@@ -676,11 +654,6 @@ class CC_BPGHP {
 
 		// Return the correct records, based on the query.
 		$results = array_slice( $results, $query['offset'], $query['posts_per_page'] );
-
-	    $towrite = PHP_EOL . 'results, after' . print_r($results, TRUE);
-  	    $fp = fopen('link-to.txt', 'a');
-	    fwrite($fp, $towrite);
-	    fclose($fp);
 
 	    return $results;
 	}
