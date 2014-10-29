@@ -18,12 +18,13 @@
 
         	// Instantiate the main class so we can get the slug
         	$ccgph_class = CC_BPGHP::get_instance();
-			
+			$access = ccghp_enabled_for_group( bp_get_current_group_id() ) ? 'anyone' : 'noone';
+
 			$args = array(
 	            	'slug'              => $ccgph_class->get_plugin_slug(),
-	           		'name'              => 'Hub Home',
-	           		'access'			=> 'anyone', // BP 2.1
-	           		'show_tab'			=> ccghp_enabled_for_group( bp_get_current_group_id() ) ? 'anyone' : 'noone', // BP 2.1
+	           		'name'              => 'Home',
+	           		'access'			=> $access, // BP 2.1
+	           		'show_tab'			=> $access, // BP 2.1
 	           		'nav_item_position' => 1,
 	           		'screens' => array(
 		                'edit' => array(
@@ -36,7 +37,7 @@
 		            ),
 	        	);
 	        
-	        	parent::init( $args );
+        	parent::init( $args );
 			
 		}
 
