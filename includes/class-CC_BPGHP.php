@@ -17,7 +17,7 @@ class CC_BPGHP {
 	 *
 	 * @var     string
 	 */
-	const VERSION = '1.1.0';
+	const VERSION = '1.2.0';
 
 	/**
 	 *
@@ -95,6 +95,9 @@ class CC_BPGHP {
 		 * TODO: after BP 2.1 we can use this, I think.
 		 */
 		add_filter( 'bp_groups_default_extension', array( $this, 'change_group_default_tab' ) );
+
+		// Don't show the "activity" tab if a group home page exists and if the user isn't a member of the group.
+		add_action( 'bp_setup_nav', array( $this, 'hide_activity_tab' ), 99 );
 
 		/* Add a tab to house the group activity, since we're using "Home" for the group home page. */
 		// add_action( 'bp_actions', array( $this, 'add_group_activity_tab' ), 8 );
@@ -342,6 +345,25 @@ class CC_BPGHP {
 		return $default_tab;
 	}
 
+	/**
+	 * Don't show the "activity" tab if a group home page exists, the group is not public, and if the user isn't a member of the group.
+	 *
+	 * @since    1.2.0
+	 */
+	public function hide_activity_tab(){
+		// Only fire if viewing a single group.
+		if ( ! bp_is_groups_component() || ! $group = groups_get_current_group() ){
+			return;
+		}
+
+		// Change the behavior only if there is a group home page, the group is not public and the visitor is either not logged in or not a member.
+		if ( ccghp_enabled_for_group( $group->id ) && bp_get_group_status( $group ) != 'public'	) {
+			if ( ! ( $user_id = get_current_user_id() ) || ! groups_is_user_member( $user_id, $group->id ) ) {
+				$bp = buddypress();
+				unset( $bp->bp_options_nav[$bp->groups->current_group->slug]['home'] );
+			}
+		}
+	}
 	
 	/**
 	 * Move activity off to its own tab. We'll reuse the Home tab
