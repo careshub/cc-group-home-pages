@@ -53,14 +53,14 @@ function cc_get_group_home_page_post( $group_id = null, $status = null ) {
                             'type'          => 'NUMERIC'
                             )
                         )
-    ); 
+    );
     $custom_front_query = new WP_Query( $args );
 
     return $custom_front_query;
 }
 /**
- * Check to see if we're viewing a group's home page. 
- * 
+ * Check to see if we're viewing a group's home page.
+ *
  * @since    1.0.0
  */
 function ccghp_is_group_home_page() {
@@ -72,9 +72,9 @@ function ccghp_is_group_home_page() {
     return false;
 }
 /**
- * Check to see if we're viewing a group's home page setting screen. 
+ * Check to see if we're viewing a group's home page setting screen.
  * Like: /istanbul-secrets/admin/group-home/
- * 
+ *
  * @since    1.0.0
  */
 function ccghp_is_settings_screen() {

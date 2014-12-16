@@ -18,8 +18,8 @@ Author: David Cavins
  * @copyright 2014 CommmunityCommons.org
  */
 
-/* 
-* TODO: At the moment, this relies on template fixes to work. 
+/*
+* TODO: At the moment, this relies on template fixes to work.
 * Post-BP 2.1, we should be able to do everything using the visibility and access settings and not rely on custom template changes.
 */
 

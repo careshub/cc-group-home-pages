@@ -339,9 +339,9 @@ class CC_BPGHP {
 		if ( $group_id = bp_get_current_group_id() ) {
 
 			$default_tab = ( ccghp_enabled_for_group( $group_id ) ? $this->plugin_slug : $default_tab );
-		 
+
 		}
-		 
+
 		return $default_tab;
 	}
 
@@ -364,7 +364,7 @@ class CC_BPGHP {
 			}
 		}
 	}
-	
+
 	/**
 	 * Move activity off to its own tab. We'll reuse the Home tab
 	 * TODO: after BP 2.1 we can do this another way, using the access and show_tab properties
@@ -378,7 +378,7 @@ class CC_BPGHP {
 
 	  $bp = buddypress();
 
-	  // Only add the "Home" tab if the group has a custom front page, so check for an associated post. 
+	  // Only add the "Home" tab if the group has a custom front page, so check for an associated post.
 	  // Only add the new "Activity" tab if the group is visible to the user.
 	  // Todo this will fail if a page is associated to multiple groups.
 	    $group_id = $bp->groups->current_group->id ;
@@ -394,28 +394,28 @@ class CC_BPGHP {
 	                            'type'          => 'NUMERIC'
 	                            )
 	                        )
-	    ); 
+	    );
 	    $custom_front_query = new WP_Query( $args );
 
 	  	// TODO New approach: don't move activity, just rename "Home" to "Activity" using a language file, then create the new tab to show the group home page when appropriate. Yah?
-	    if( $custom_front_query->have_posts() ) { 
-	      bp_core_new_subnav_item( 
-	        array( 
-	          'name' => 'Activity', 
-	          'slug' => 'activity', 
-	          'parent_slug' => $bp->groups->current_group->slug, 
-	          'parent_url' => bp_get_group_permalink( $bp->groups->current_group ), 
-	          'position' => 11, 
+	    if( $custom_front_query->have_posts() ) {
+	      bp_core_new_subnav_item(
+	        array(
+	          'name' => 'Activity',
+	          'slug' => 'activity',
+	          'parent_slug' => $bp->groups->current_group->slug,
+	          'parent_url' => bp_get_group_permalink( $bp->groups->current_group ),
+	          'position' => 11,
 	          'item_css_id' => 'nav-activity',
 	          'screen_function' => create_function('',"bp_core_load_template( apply_filters( 'groups_template_group_home', 'groups/single/home' ) );"),
 	          'user_has_access' => 1
-	        ) 
+	        )
 	      );
-	   
+
 	      if ( bp_is_current_action( 'activity' ) ) {
 	        add_action( 'bp_template_content_header', create_function( '', 'echo "' . esc_attr( 'Activity' ) . '";' ) );
 	        add_action( 'bp_template_title', create_function( '', 'echo "' . esc_attr( 'Activity' ) . '";' ) );
-	      } // END if ( bp_is_current_action( 'activity' ) ) 
+	      } // END if ( bp_is_current_action( 'activity' ) )
 	    } // END if( $custom_front_query->have_posts() )
 	}
 
@@ -427,7 +427,7 @@ class CC_BPGHP {
 	 */
 	public function register_cpt_group_home_page() {
 
-	    $labels = array( 
+	    $labels = array(
 	        'name' => _x( 'Group Home Pages', 'group_home_page' ),
 	        'singular_name' => _x( 'Group Home Page', 'group_home_page' ),
 	        'add_new' => _x( 'Add New', 'group_home_page' ),
@@ -442,7 +442,7 @@ class CC_BPGHP {
 	        'menu_name' => _x( 'Group Homes', 'group_home_page' ),
 	    );
 
-	    $args = array( 
+	    $args = array(
 	        'labels' => $labels,
 	        'hierarchical' => false,
 	        'description' => 'This post type is queried when a group home page is requested.',
@@ -546,7 +546,7 @@ class CC_BPGHP {
 	 * @since    1.0.0
 	 */
 	public function add_mmc_filter() {
-		if( ( bp_is_current_component( 'groups' ) && bp_is_current_action( 'admin' ) && bp_is_action_variable( $this->plugin_slug, 0 ) ) 
+		if( ( bp_is_current_component( 'groups' ) && bp_is_current_action( 'admin' ) && bp_is_action_variable( $this->plugin_slug, 0 ) )
 			|| ( isset( $_POST['action'] ) && $_POST['action'] == 'upload-attachment' )
 			) {
 		    add_filter( 'map_meta_cap', array( $this, 'setup_map_meta_cap' ), 14, 4 );
@@ -559,17 +559,17 @@ class CC_BPGHP {
 	 *
 	 * @since    1.0.0
 	 */
-	public function setup_map_meta_cap( $primitive_caps, $meta_cap, $user_id, $args ) {	
+	public function setup_map_meta_cap( $primitive_caps, $meta_cap, $user_id, $args ) {
 		// In order to upload media, a user needs to have caps.
-		// Check if this is a request we want to filter. 
-		if ( ! in_array( $meta_cap, array( 'upload_files', 'edit_post', 'delete_post' ) ) ) {  
-	        return $primitive_caps;  
+		// Check if this is a request we want to filter.
+		if ( ! in_array( $meta_cap, array( 'upload_files', 'edit_post', 'delete_post' ) ) ) {
+	        return $primitive_caps;
 	    }
 
 		// It would be useful for a user to be able to delete her own uploaded media.
 	    // If this is someone else's post, we don't want to allow deletion of that, though.
 	    if ( $meta_cap == 'delete_post' && in_array( 'delete_others_posts', $primitive_caps ) ) {
-	        return $primitive_caps;  
+	        return $primitive_caps;
 	    }
 
 	  	// We pass a blank array back, meaning there's no capability required.
@@ -584,7 +584,7 @@ class CC_BPGHP {
 	 * @since    1.0.0
 	 */
 	public function show_users_own_attachments( $wp_query_obj ) {
-	 
+
 		// The image library is populated via an AJAX request, so we'll check for that
 		if( isset( $_POST['action'] ) && $_POST['action'] == 'query-attachments' ) {
 
@@ -621,7 +621,7 @@ class CC_BPGHP {
 
 	    // Limit the post types that are queried
 	    // We'll want to include bp_docs and group_stories, but they have weird queries (group-related) so we'll add them back in at the 'wp_link_query' filter.
-	    $query['post_type'] = array(); 
+	    $query['post_type'] = array();
 
    	    // If the search is included in the query, wp will find nothing and things break. Nice.
    	    if ( isset( $query['s'] ) ) {
@@ -686,20 +686,20 @@ class CC_BPGHP {
 		$good_docs = array();
 
 	    if ( function_exists('bp_docs_has_docs') && bp_docs_has_docs( $docs_args ) ) :
-	        while ( bp_docs_has_docs() ) : 
+	        while ( bp_docs_has_docs() ) :
 	            bp_docs_the_doc();
 	            //Only allow to attach docs that have read set to anyone.
 	            $doc_id = get_the_ID();
 	            $settings = bp_docs_get_doc_settings( $doc_id );
-	            if ( $settings['read'] == 'anyone') { 
+	            if ( $settings['read'] == 'anyone') {
 					$good_docs[] = array(
 						'ID' 		=> $doc_id,
 						'title' 	=> get_the_title(),
 						'permalink' => get_the_permalink(),
 						'info' 		=> 'Doc',
 						'datetime'	=> get_the_date('Ymd'),
-						);    
-	            }   
+						);
+	            }
 	        endwhile;
 	    endif;
 
@@ -721,7 +721,7 @@ class CC_BPGHP {
 						'permalink' => get_permalink( $narrative->ID ),
 						'info' 		=> 'Hub Narrative',
 						'datetime'	=> date( 'Ymd', strtotime( $narrative->post_date ) ),
-						); 
+						);
 		   }
 		}
 		return $retval;

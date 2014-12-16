@@ -11,7 +11,7 @@
 // We're mostly using the group extension to create a way for group admins to edit the group's home page via the group's Admin tab
 
  if ( class_exists( 'BP_Group_Extension' ) ) : // Recommended, to prevent problems during upgrade or when Groups are disabled
- 
+
     class CC_Group_Home_Page_Extension extends BP_Group_Extension {
 
         function __construct() {
@@ -36,13 +36,13 @@
 		                ),
 		            ),
 	        	);
-	        
+
         	parent::init( $args );
-			
+
 		}
 
 		/**
-	     * settings_screen() is the catch-all method for displaying the content 
+	     * settings_screen() is the catch-all method for displaying the content
 	     * of the edit, create, and Dashboard admin panels
 	     */
 	    function settings_screen( $group_id = 0 ) {
@@ -61,12 +61,12 @@
 	        	// The group has a front page and we can load up the editor.
 	        	while ( $custom_front_query->have_posts() ) :
 
-					$custom_front_query->the_post(); 
+					$custom_front_query->the_post();
 					$post_content = get_the_content();
 					$post_id = get_the_ID();
 					$post_published = get_post_status( $post_id );
 
-				endwhile; 	
+				endwhile;
 
 	                $args = array(
 	                        // 'textarea_rows' => 100,
@@ -77,14 +77,14 @@
 		                	'editor_height' => 360,
 		                	'tabfocus_elements' => 'insert-media-button,save-post',
 	                    );
-	                    wp_editor( $post_content, 'group_home_page_content', $args); 
+	                    wp_editor( $post_content, 'group_home_page_content', $args);
 	                ?>
 		            <p>
 			            <label for="cc_group_home_published">Published Status</label>
 				        <select name="cc_group_home_published" id="cc_group_home_published">
 				            <option <?php selected( $post_published, "publish" ); ?> value="publish">Published</option>
-				            <option <?php selected( $post_published, "draft" ); 
-				                if ( empty( $post_published ) ) { echo 'selected="selected"' ; } 
+				            <option <?php selected( $post_published, "draft" );
+				                if ( empty( $post_published ) ) { echo 'selected="selected"' ; }
 				                ?> value="draft">Draft</option>
 				        </select>
 				    </p>
@@ -93,25 +93,25 @@
 
 			}
 	    }
-	 
+
 	    /**
-	     * settings_screen_save() contains the catch-all logic for saving 
+	     * settings_screen_save() contains the catch-all logic for saving
 	     * settings from the edit, create, and Dashboard admin panels
 	     */
 	    function settings_screen_save( $group_id = 0 ) {
 	    	// Use shared routine
-	    	$this->ccghp_save_routine( $group_id );		    
+	    	$this->ccghp_save_routine( $group_id );
 		}
- 		
+
 	    /**
 	     * edit_screen_save() is more specific and only used on the front end edit tab
 	     */
 	    function edit_screen_save( $group_id = 0 ) {
 	    	// Use shared routine
 	    	$this->ccghp_save_routine( $group_id );
-	    	
+
 	    	// TODO: BP 2.1 will make this unnecessary
-	        bp_core_redirect( bp_get_group_permalink( groups_get_group( array( 'group_id' => $group_id ) ) ) . 'admin/' . $this->slug ); 			    
+	        bp_core_redirect( bp_get_group_permalink( groups_get_group( array( 'group_id' => $group_id ) ) ) . 'admin/' . $this->slug );
 		}
 
         /**
@@ -120,7 +120,7 @@
         function display() {
         	if ( ! isset( $group_id ) ) {
 	    		$group_id = bp_get_current_group_id();
-	    	} 
+	    	}
 
 		    $custom_front_query = cc_get_group_home_page_post( $group_id );
 
@@ -139,7 +139,7 @@
 			do_action( 'cc_group_home_page_after_content', $group_id );
 
         }
- 
+
         /**
          * If your group extension requires a meta box in the Dashboard group admin,
          * use this method to display the content of the metabox
@@ -162,7 +162,7 @@
         //      	echo '<p>This group <strong>does not</strong> have a custom home page.</p>';
         //     };
         // }
- 
+
         /**
          * The routine run after the group is saved on the Dashboard group admin screen
          *
@@ -173,7 +173,7 @@
         // function admin_screen_save( $group_id ) {
             // Grab your data out of the $_POST global and save as necessary
         // }
- 
+
         // function widget_display() {
         // }
 
@@ -223,11 +223,11 @@
 					// Something went wrong
 					bp_core_add_message( 'We couldn\'t update the group home page at this time.', 'error' );
 				}
-	        }	
+	        }
         }
 
     }
- 
+
     bp_register_group_extension( 'CC_Group_Home_Page_Extension' );
- 
+
 endif; // class_exists( 'BP_Group_Extension' )
