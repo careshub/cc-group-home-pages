@@ -118,7 +118,7 @@
          * Use this function to display the actual content of your group extension when the nav item is selected
          */
         function display( $group_id = null ) {
-        	if ( ! isset( $group_id ) ) {
+        	if ( is_null( $group_id ) ) {
 	    		$group_id = bp_get_current_group_id();
 	    	}
 
