@@ -122,8 +122,9 @@
 	    		$group_id = bp_get_current_group_id();
 	    	}
 
-		    $custom_front_query = cc_get_group_home_page_post( $group_id );
+            do_action( 'cc_group_home_page_before_content', $group_id );
 
+            $custom_front_query = cc_get_group_home_page_post( $group_id );
 			while ( $custom_front_query->have_posts() ) :
 				$custom_front_query->the_post(); ?>
 				<article id="post-<?php the_ID(); ?>" <?php post_class( 'clear' ); ?>>
