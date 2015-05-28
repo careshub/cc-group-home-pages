@@ -428,18 +428,18 @@ class CC_BPGHP {
 	public function register_cpt_group_home_page() {
 
 	    $labels = array(
-	        'name' => _x( 'Group Home Pages', 'group_home_page' ),
-	        'singular_name' => _x( 'Group Home Page', 'group_home_page' ),
+	        'name' => _x( 'Hub Home Pages', 'group_home_page' ),
+	        'singular_name' => _x( 'Hub Home Page', 'group_home_page' ),
 	        'add_new' => _x( 'Add New', 'group_home_page' ),
-	        'add_new_item' => _x( 'Add New Group Home Page', 'group_home_page' ),
-	        'edit_item' => _x( 'Edit Group Home Page', 'group_home_page' ),
-	        'new_item' => _x( 'New Group Home Page', 'group_home_page' ),
-	        'view_item' => _x( 'View Group Home Page', 'group_home_page' ),
-	        'search_items' => _x( 'Search Group Home Pages', 'group_home_page' ),
-	        'not_found' => _x( 'No group home pages found', 'group_home_page' ),
-	        'not_found_in_trash' => _x( 'No group home pages found in Trash', 'group_home_page' ),
-	        'parent_item_colon' => _x( 'Parent Group Home Page:', 'group_home_page' ),
-	        'menu_name' => _x( 'Group Homes', 'group_home_page' ),
+	        'add_new_item' => _x( 'Add New Hub Home Page', 'group_home_page' ),
+	        'edit_item' => _x( 'Edit Hub Home Page', 'group_home_page' ),
+	        'new_item' => _x( 'New Hub Home Page', 'group_home_page' ),
+	        'view_item' => _x( 'View Hub Home Page', 'group_home_page' ),
+	        'search_items' => _x( 'Search Hub Home Pages', 'group_home_page' ),
+	        'not_found' => _x( 'No hub home pages found', 'group_home_page' ),
+	        'not_found_in_trash' => _x( 'No hub home pages found in Trash', 'group_home_page' ),
+	        'parent_item_colon' => _x( 'Parent Hub Home Page:', 'group_home_page' ),
+	        'menu_name' => _x( 'Hub Homes', 'group_home_page' ),
 	    );
 
 	    $args = array(
@@ -450,7 +450,7 @@ class CC_BPGHP {
 	        'public' => true,
 	        'show_ui' => true,
 	        'show_in_menu' => true,
-	        'menu_position' => 53,
+	        'menu_position' => 51,
 	        //'menu_icon' => '',
 	        'show_in_nav_menus' => false,
 	        'publicly_queryable' => true,
