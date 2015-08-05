@@ -446,7 +446,7 @@ class CC_BPGHP {
 	        'labels' => $labels,
 	        'hierarchical' => false,
 	        'description' => 'This post type is queried when a group home page is requested.',
-	        'supports' => array( 'title', 'editor' ),
+	        'supports' => array( 'title', 'editor', 'revisions' ),
 	        'public' => true,
 	        'show_ui' => true,
 	        'show_in_menu' => true,
