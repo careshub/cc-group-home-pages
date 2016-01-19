@@ -45,7 +45,7 @@ function cc_get_group_home_page_post( $group_id = null, $status = null ) {
 	$args =  array(
        'post_type'   => 'group_home_page',
        'posts_per_page' => '1',
-       'post_status' => $status == 'draft' ? array( 'pending', 'draft', 'publish' ) : array( 'publish' ),
+       'post_status' => $status == 'draft' ? array( 'auto-draft', 'pending', 'draft', 'publish' ) : array( 'publish' ),
        'meta_query'  => array(
                            array(
                             'key'           => 'group_home_page_association',

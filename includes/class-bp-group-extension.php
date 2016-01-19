@@ -186,13 +186,14 @@
 	    		// Get group name to use for title
 	    		$current_group = groups_get_group( array( 'group_id' => $group_id ) );
 	    		//Get the selected "published" status
-    		    $published_status = in_array( $_POST['cc_group_home_published'], array( 'publish', 'draft' ) ) ? $_POST['cc_group_home_published'] : 'draft';
+    		    $published_status = in_array( $_POST['cc_group_home_published'], array( 'publish', 'draft' ) ) ? $_POST['cc_group_home_published'] : 'auto-draft';
+    		    $post_content = ! empty( $_POST['group_home_page_content'] ) ? $_POST['group_home_page_content'] : '';
 
 		    	// Some defaults
 				$post_data = array(
 	                'post_type' => 'group_home_page',
 	                'post_title' => $current_group->name,
-   	                'post_content' => $_POST['group_home_page_content'],
+   	                'post_content' => $post_content,
                     'post_status' => $published_status,
 	                'comment_status' => 'closed'
 	            );
@@ -205,13 +206,15 @@
 	   	        	$post_data['post_author'] = get_current_user_id();
 	   	        }
 
-	   			// $towrite = PHP_EOL . print_r($post_data, TRUE);
-				// $fp = fopen('creating_group_home_page.txt', 'a');
-				// fwrite($fp, $towrite);
-				// fclose($fp);
-
 	        	// Save the post
-	            $post_id = wp_insert_post($post_data);
+	        	// WP requires post_content by default, so we temporarily lift that restriction.
+	        	if ( empty( $post_content ) ) {
+		        	add_filter( 'wp_insert_post_empty_content', '__return_false' );
+		        }
+	            $post_id = wp_insert_post( $post_data, true ) ;
+	        	if ( empty( $post_content ) ) {
+					remove_filter( 'wp_insert_post_empty_content', '__return_false' );
+				}
 
 	        	// If the post save was successful, save the postmeta
 	            if ( $post_id ) {
