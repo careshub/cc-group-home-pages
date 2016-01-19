@@ -63,11 +63,10 @@ class CC_BPGHP {
 	 */
 	private function __construct() {
 
+		$this->load_dependencies();
+
 		// Load plugin text domain
 		// add_action( 'init', array( $this, 'load_plugin_textdomain' ) );
-
-		// Add filter to catch removal of a story from a group
-		// add_action( 'bp_init', array( $this, 'remove_story_from_group'), 75 );
 
 		// Activate plugin when new blog is added
 		// add_action( 'wpmu_new_blog', array( $this, 'activate_new_site' ) );
@@ -92,7 +91,6 @@ class CC_BPGHP {
 
 		/**
 		 * Set the group home page as the default page if one exists.
-		 * TODO: after BP 2.1 we can use this, I think.
 		 */
 		add_filter( 'bp_groups_default_extension', array( $this, 'change_group_default_tab' ) );
 
@@ -112,14 +110,20 @@ class CC_BPGHP {
 		// This functionality is shared between several plugins and has been moved
 		// to a standalone plugin "CC Manage Media and Permissions"
 
-		// Add styles to the settings screen
-		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_edit_styles' ) );
+		// Add styles & scripts to the settings screen
+		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_edit_styles_scripts' ) );
 
 	    // Change behavior of link button in wp_editor
 	    // First, remove many of the post types from the query
 	    add_filter( 'wp_link_query_args', array( $this, 'limit_link_suggestion_query' ) );
 	    // Add back in docs & group stories
 	    add_filter( 'wp_link_query', array( $this, 'filter_link_suggestions' ), 14, 2 );
+
+	    $cc_bpghp_edit_lock = new CC_BPGHP_Edit_Lock();
+	    // Use WP's heartbeat API to set content locks when a user is editing a group home page from the front end.
+		add_filter( 'heartbeat_received', array( $cc_bpghp_edit_lock, 'heartbeat_callback' ), 10, 3 );
+		// Remove a lock when the user navigates away.
+		add_action( 'wp_ajax_cc_bpghp_remove_edit_lock', array( $cc_bpghp_edit_lock, 'remove_edit_lock' ) );
 
 	}
 
@@ -149,6 +153,33 @@ class CC_BPGHP {
 		}
 
 		return self::$instance;
+	}
+
+	/**
+	 * Load the required dependencies for this plugin.
+	 *
+	 * Include the following files that make up the plugin:
+	 *
+	 * - Plugin_Name_Loader. Orchestrates the hooks of the plugin.
+	 * - Plugin_Name_i18n. Defines internationalization functionality.
+	 * - Plugin_Name_Admin. Defines all hooks for the dashboard.
+	 * - Plugin_Name_Public. Defines all hooks for the public side of the site.
+	 *
+	 * Create an instance of the loader which will be used to register the hooks
+	 * with WordPress.
+	 *
+	 * @since    1.0.0
+	 * @access   private
+	 */
+	private function load_dependencies() {
+		// Edit locking.
+		require_once( dirname( __FILE__ ) . '/edit-lock.php' );
+
+		// Helper and utility functions.
+		require_once( dirname( __FILE__ ) . '/bpghp-functions.php' );
+
+		// The group extension class.
+		require( dirname( __FILE__ ) . '/class-bp-group-extension.php' );
 	}
 
 	/**
@@ -315,9 +346,18 @@ class CC_BPGHP {
 	 *
 	 * @since    1.0.0
 	 */
-	public function enqueue_edit_styles() {
-		if ( ccghp_is_settings_screen() )
+	public function enqueue_edit_styles_scripts() {
+		if ( ccghp_is_settings_screen() ) {
+
 			wp_enqueue_style( $this->plugin_slug . '-edit-screen-styles', plugins_url( 'css/edit.css', __FILE__ ), array(), self::VERSION );
+
+			wp_enqueue_script( 'cc_bpghp_edit', plugins_url( 'js/edit.js', __FILE__ ), array( 'jquery', 'heartbeat' ), self::VERSION );
+
+			$strings = array(
+				'pulse' => cc_bpghp_heartbeat_pulse(),
+			);
+			wp_localize_script( 'cc_bpghp_edit', 'cc_bpghp', $strings );
+		}
 	}
 
 	/**
@@ -325,7 +365,7 @@ class CC_BPGHP {
 	 *
 	 * @since    1.0.0
 	 */
-	public function enqueue_scripts() {
+	public function enqueue_edit_scripts() {
 	}
 
 

@@ -45,52 +45,76 @@
 	     * settings_screen() is the catch-all method for displaying the content
 	     * of the edit, create, and Dashboard admin panels
 	     */
-	    function settings_screen( $group_id = 0 ) {
+	    function settings_screen( $group_id = null ) {
+	    	// Check for concurrent editing.
+	    	$home_page_post_id = cc_get_group_home_page_post_id( $group_id );
+	    	$post_lock = cc_bpghp_check_post_lock( $home_page_post_id );
 
-	    	// print_filters_for( 'the_content' );
+	    	if ( $post_lock ) {
+	    		?>
+	    		<div class="info" id="message"><p id="ccghp_edit_lock_status"><?php echo bp_core_get_userlink( $post_lock ); ?> is currently editing this page.<?php
+		    		// Site admins can break the lock, of course.
+		    		if ( current_user_can( 'delete_others_pages' ) ) {
+		    			$break_edit_lock_link = get_edit_post_link( $home_page_post_id );
+		    			echo ' As a site admin, you can <a href= "' . $break_edit_lock_link . '">break the edit lock</a>.';
+		    		}
+	    		?></p></div>
+                <input type="hidden" name="group_home_page_post_id" id="group_home_page_post_id" value="<?php echo $home_page_post_id; ?>">
+                <input type="hidden" name="group_home_page_heartbeat_action" id="group_home_page_heartbeat_action" value="check_post_lock">
+	    		<!-- <input type="submit" disabled="disabled" name="save-disabled"> -->
+	    		<?php
+	    	} else {
+	    		// Set an edit lock as the page loads.
+				$now = time();
+				$user_id = bp_loggedin_user_id();
+				$lock = "$now:$user_id";
+				update_post_meta( $home_page_post_id, '_edit_lock', $lock );
 
-	        $custom_front_query = cc_get_group_home_page_post( $group_id, 'draft' );
-	        // print_r($custom_front_query->posts);
-	        if ( empty( $custom_front_query->posts ) ) {
-				// The group doesn't have a front page yet, so we need to create one. For a variety of reasons, but mostly we need the post ID.
-				?>
-				<label><input type='checkbox' name='create_a_group_home_page' value='1'> This group should have a home page.</label>
-				<?php
+		        $custom_front_query = cc_get_group_home_page_post( $group_id, 'draft' );
+		        // print_r($custom_front_query->posts);
+		        if ( empty( $custom_front_query->posts ) ) {
+					// The group doesn't have a front page yet, so we need to create one. For a variety of reasons, but mostly we need the post ID.
+					?>
+					<label><input type='checkbox' name='create_a_group_home_page' value='1'> This hub should have a home page.</label>
+					<?php
 
-	        } else {
-	        	// The group has a front page and we can load up the editor.
-	        	while ( $custom_front_query->have_posts() ) :
+		        } else {
+		        	// The group has a front page and we can load up the editor.
+		        	while ( $custom_front_query->have_posts() ) :
 
-					$custom_front_query->the_post();
-					$post_content = get_the_content();
-					$post_id = get_the_ID();
-					$post_published = get_post_status( $post_id );
+						$custom_front_query->the_post();
+						$post_content = get_the_content();
+						$post_id = get_the_ID();
+						$post_published = get_post_status( $post_id );
 
-				endwhile;
+					endwhile;
 
-	                $args = array(
-	                        // 'textarea_rows' => 100,
-	                        // 'teeny' => true,
-	                        // 'quicktags' => false
-	                		'tinymce' => true,
-	                		'media_buttons' => true,
-		                	'editor_height' => 360,
-		                	'tabfocus_elements' => 'insert-media-button,save-post',
-	                    );
-	                    wp_editor( $post_content, 'group_home_page_content', $args);
-	                ?>
-		            <p>
-			            <label for="cc_group_home_published">Published Status</label>
-				        <select name="cc_group_home_published" id="cc_group_home_published">
-				            <option <?php selected( $post_published, "publish" ); ?> value="publish">Published</option>
-				            <option <?php selected( $post_published, "draft" );
-				                if ( empty( $post_published ) ) { echo 'selected="selected"' ; }
-				                ?> value="draft">Draft</option>
-				        </select>
-				    </p>
-	                <input type="hidden" name="group_home_page_post_id" value="<?php echo $post_id; ?>">
-	                <?php
+		                $args = array(
+		                        // 'textarea_rows' => 100,
+		                        // 'teeny' => true,
+		                        // 'quicktags' => false
+		                		'tinymce' => true,
+		                		'media_buttons' => true,
+			                	'editor_height' => 360,
+			                	'tabfocus_elements' => 'insert-media-button,save-post',
+		                    );
+		                    wp_editor( $post_content, 'group_home_page_content', $args);
+		                ?>
+			            <p>
+				            <label for="cc_group_home_published">Published Status</label>
+					        <select name="cc_group_home_published" id="cc_group_home_published">
+					            <option <?php selected( $post_published, "publish" ); ?> value="publish">Published</option>
+					            <option <?php selected( $post_published, "draft" );
+					                if ( empty( $post_published ) ) { echo 'selected="selected"' ; }
+					                ?> value="draft">Draft</option>
+					        </select>
+					    </p>
+		                <input type="hidden" name="group_home_page_post_id" id="group_home_page_post_id" value="<?php echo $post_id; ?>">
+		                <!-- This input is used for our hearbeat request to keep the lease renewed. -->
+                        <input type="hidden" name="group_home_page_heartbeat_action" id="group_home_page_heartbeat_action" value="renew_post_lock">
+		                <?php
 
+				}
 			}
 	    }
 

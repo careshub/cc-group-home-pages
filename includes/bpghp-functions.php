@@ -59,6 +59,34 @@ function cc_get_group_home_page_post( $group_id = null, $status = null ) {
 
     return $custom_front_query;
 }
+
+/**
+ * For a given group, get the group home page post's ID.
+ *
+ * @since    1.2.0
+ */
+function cc_get_group_home_page_post_id( $group_id = null, $status = null ) {
+    $group_id = ( $group_id ) ? $group_id : bp_get_current_group_id();
+
+    $args =  array(
+       'post_type'   => 'group_home_page',
+       'posts_per_page' => '1',
+       'post_status' => $status == 'draft' ? array( 'auto-draft', 'pending', 'draft', 'publish' ) : array( 'publish' ),
+       'fields' => 'ids',
+       'meta_query'  => array(
+                           array(
+                            'key'           => 'group_home_page_association',
+                            'value'         => $group_id,
+                            'compare'       => '=',
+                            'type'          => 'NUMERIC'
+                            )
+                        )
+    );
+    $custom_front_query = new WP_Query( $args );
+
+    return current( $custom_front_query->posts );
+}
+
 /**
  * Check to see if we're viewing a group's home page.
  *
