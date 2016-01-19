@@ -14,23 +14,8 @@
  * @since    1.0.0
  */
 function ccghp_enabled_for_group( $group_id ) {
-	$setting = false;
-
-    $custom_front_query = cc_get_group_home_page_post( $group_id );
-
-    $has_posts = $custom_front_query->have_posts();
-
-    if ( $has_posts ) {
-		$setting = true;
-        // If the group is hidden, this shouldn't show for non-group members.
-        if ( bp_get_group_status( groups_get_group( array( 'group_id' => $group_id ) ) ) == 'hidden' ) {
-            $setting = false;
-            if ( current_user_can( 'delete_pages' ) || groups_is_user_member( get_current_user_id(), $group_id ) ) {
-                $setting = true;
-            }
-        }
-    }
-	return apply_filters('ccghp_enabled_for_group', $setting);
+    $setting = (bool) groups_get_groupmeta( $group_id, 'cc_has_home_page' );
+	return apply_filters( 'ccghp_enabled_for_group', $setting );
 }
 
 

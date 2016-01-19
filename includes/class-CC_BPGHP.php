@@ -125,6 +125,9 @@ class CC_BPGHP {
 		// Remove a lock when the user navigates away.
 		add_action( 'wp_ajax_cc_bpghp_remove_edit_lock', array( $cc_bpghp_edit_lock, 'remove_edit_lock' ) );
 
+		// When a post is updated/trashed, update the has_home_page groupmeta.
+		add_action( 'transition_post_status', array( $this, 'update_has_home_page' ), 10, 3 );
+
 	}
 
 	/**
@@ -379,7 +382,7 @@ class CC_BPGHP {
 	 	// Get the current group id.
 		if ( $group_id = bp_get_current_group_id() ) {
 
-			$default_tab = ( ccghp_enabled_for_group( $group_id ) ? $this->plugin_slug : $default_tab );
+			$default_tab = ccghp_enabled_for_group( $group_id ) ? $this->plugin_slug : $default_tab;
 
 		}
 
@@ -749,5 +752,39 @@ class CC_BPGHP {
 		   }
 		}
 		return $retval;
+	}
+
+	/**
+	 * When a post is updated/trashed, update the has_home_page groupmeta.
+	 *
+	 * @since 1.3.0
+	 *
+	 * @param string  $new_status New post status.
+	 * @param string  $old_status Old post status.
+	 * @param WP_Post $post       Post object.
+	 *
+	 */
+	public function update_has_home_page( $new_status, $old_status, $post ) {
+
+		// Is a hub home page being changed?
+		if ( 'group_home_page' != $post->post_type ) {
+			return;
+		}
+
+		// What group is this associated with?
+		$group_id = get_post_meta( $post->ID, 'group_home_page_association', true );
+
+		if ( empty( $group_id ) ) {
+			return;
+		}
+
+		// True if published, false otherwise--draft, trash
+		if ( 'publish' == $new_status ) {
+			$has_home_page = 1;
+		} else {
+			$has_home_page = 0;
+		}
+
+		groups_update_groupmeta( $group_id, 'cc_has_home_page', $has_home_page );
 	}
 } // End class
