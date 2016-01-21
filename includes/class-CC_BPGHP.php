@@ -73,17 +73,16 @@ class CC_BPGHP {
 		// Don't interpret shortcodes on the group home page edit screen.
 		add_action( 'bp_init', array( $this, 'remove_shortcode_filter_on_settings_screen') );
 
-		// Only allow users to see their own items in the media library uploader.
-		// This functionality is shared between several plugins and has been moved
-		// to a standalone plugin "CC Manage Media and Permissions"
+		/* Only allow users to see their own items in the media library uploader.
+		 * This functionality is shared between several plugins and has been moved
+		 * to a standalone plugin "CC Manage Media and Permissions"
+		 */
 
 		// Add styles & scripts to the settings screen
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_edit_styles_scripts' ) );
 
-		// Change behavior of link button in wp_editor
-		// First, remove many of the post types from the query
-		add_filter( 'wp_link_query_args', array( $this, 'limit_link_suggestion_query' ) );
-		// Add back in docs & group stories
+		// Change behavior of link button in wp_editor.
+		// Add back in docs & group stories.
 		add_filter( 'wp_link_query', array( $this, 'filter_link_suggestions' ), 14, 2 );
 
 		// Edit locking for front-end editing. /////////////////////////////////
@@ -527,33 +526,6 @@ class CC_BPGHP {
 		if ( bp_is_current_component( 'groups' ) && bp_is_current_action( 'admin' ) && bp_is_action_variable( $this->plugin_slug, 0 ) ) {
 			remove_filter( 'the_content', 'do_shortcode', 11);
 		}
-	}
-
-	/**
-	* Change what populates the "link to existing content" box in the wp_editor instance.
-	*
-	* @since 1.1.0
-	*
-	* @return array
-	*/
-	function limit_link_suggestion_query( $query ) {
-
-		if ( ! ccghp_is_settings_screen() ) {
-			return $query;
-		}
-
-		// Limit the post types that are queried.
-		// We'll want to include bp_docs and group_stories, but they have weird queries (group-related)
-		// so we'll add them back in at the 'wp_link_query' filter.
-		// $query['post_type'] = array('post');
-
-		// If the search is included in the query, WP will find nothing and things break. Nice.
-		// if ( isset( $query['s'] ) ) {
-		// 	$query['keyphrase'] = $query['s'];
-		// 	unset( $query['s'] );
-		// }
-
-		return $query;
 	}
 
 	/**
