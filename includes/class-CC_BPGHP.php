@@ -35,18 +35,6 @@ class CC_BPGHP {
 	protected $plugin_slug = 'group-home';
 
 	/**
-	 *
-	 * The ID for the AHA group on www.
-	 *
-	 *
-	 *
-	 * @since    1.0.0
-	 *
-	 * @var      int
-	 */
-	// public static cc_aha_get_group_id();// ( get_home_url() == 'http://commonsdev.local' ) ? 55 : 594 ; //594 on staging and www, 55 on local
-
-	/**
 	 * Instance of this class.
 	 *
 	 * @since    1.0.0
@@ -65,66 +53,47 @@ class CC_BPGHP {
 
 		$this->load_dependencies();
 
-		// Load plugin text domain
-		// add_action( 'init', array( $this, 'load_plugin_textdomain' ) );
-
-		// Activate plugin when new blog is added
-		// add_action( 'wpmu_new_blog', array( $this, 'activate_new_site' ) );
-
-		// Load public-facing style sheet and JavaScript.
-		// add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_styles' ) );
-		// add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
-
-		/* Define custom functionality.
-		 * Refer To http://codex.wordpress.org/Plugin_API#Hooks.2C_Actions_and_Filters
-		 */
-		// add_action( '@TODO', array( $this, 'action_method_name' ) );
-		// add_filter( '@TODO', array( $this, 'filter_method_name' ) );
-
-		/* Create a custom post type for group home pages. */
+		// Create a custom post type for group home pages.
 		add_action( 'init', array( $this, 'register_cpt_group_home_page' ) );
 
-		/* Add meta boxes on the 'add_meta_boxes' hook. */
+		// Add meta boxes on the 'add_meta_boxes' hook.
 		add_action( 'add_meta_boxes', array( $this, 'add_meta_boxes' ) );
-		/* Save post meta on the 'save_post' hook. */
+		// Save post meta on the 'save_post' hook.
 		add_action( 'save_post', array( $this, 'save_meta' ), 10, 2 );
 
-		/**
-		 * Set the group home page as the default page if one exists.
-		 */
+		// Set the group home page as the default page if one exists.
 		add_filter( 'bp_groups_default_extension', array( $this, 'change_group_default_tab' ) );
 
 		// Don't show the "activity" tab if a group home page exists and if the user isn't a member of the group.
 		add_action( 'bp_setup_nav', array( $this, 'hide_activity_tab' ), 99 );
 
-		/* Add a tab to house the group activity, since we're using "Home" for the group home page. */
-		// add_action( 'bp_actions', array( $this, 'add_group_activity_tab' ), 8 );
-
-		/* Filter "map_meta_caps" to let our users do things they normally can't, like upload media */
+		// Filter "map_meta_caps" to let our users do things they normally can't, like upload media.
 		add_action( 'bp_init', array( $this, 'add_mmc_filter') );
 
-		/* Don't interpret shortcodes on the group home page edit screen. */
+		// Don't interpret shortcodes on the group home page edit screen.
 		add_action( 'bp_init', array( $this, 'remove_shortcode_filter_on_settings_screen') );
 
-		/* Only allow users to see their own items in the media library uploader. */
+		// Only allow users to see their own items in the media library uploader.
 		// This functionality is shared between several plugins and has been moved
 		// to a standalone plugin "CC Manage Media and Permissions"
 
 		// Add styles & scripts to the settings screen
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_edit_styles_scripts' ) );
 
-	    // Change behavior of link button in wp_editor
-	    // First, remove many of the post types from the query
-	    add_filter( 'wp_link_query_args', array( $this, 'limit_link_suggestion_query' ) );
-	    // Add back in docs & group stories
-	    add_filter( 'wp_link_query', array( $this, 'filter_link_suggestions' ), 14, 2 );
+		// Change behavior of link button in wp_editor
+		// First, remove many of the post types from the query
+		add_filter( 'wp_link_query_args', array( $this, 'limit_link_suggestion_query' ) );
+		// Add back in docs & group stories
+		add_filter( 'wp_link_query', array( $this, 'filter_link_suggestions' ), 14, 2 );
 
-	    $cc_bpghp_edit_lock = new CC_BPGHP_Edit_Lock();
-	    // Use WP's heartbeat API to set content locks when a user is editing a group home page from the front end.
+		// Edit locking for front-end editing. /////////////////////////////////
+		$cc_bpghp_edit_lock = new CC_BPGHP_Edit_Lock();
+		// Use WP's heartbeat API to set content locks when a user is editing a group home page from the front end.
 		add_filter( 'heartbeat_received', array( $cc_bpghp_edit_lock, 'heartbeat_callback' ), 10, 3 );
 		// Remove a lock when the user navigates away.
 		add_action( 'wp_ajax_cc_bpghp_remove_edit_lock', array( $cc_bpghp_edit_lock, 'remove_edit_lock' ) );
 
+		// Storing "enabled status" for a single group. ////////////////////////
 		// When a post is updated/trashed, update the has_home_page groupmeta.
 		add_action( 'transition_post_status', array( $this, 'update_has_home_page' ), 10, 3 );
 
@@ -161,17 +130,7 @@ class CC_BPGHP {
 	/**
 	 * Load the required dependencies for this plugin.
 	 *
-	 * Include the following files that make up the plugin:
-	 *
-	 * - Plugin_Name_Loader. Orchestrates the hooks of the plugin.
-	 * - Plugin_Name_i18n. Defines internationalization functionality.
-	 * - Plugin_Name_Admin. Defines all hooks for the dashboard.
-	 * - Plugin_Name_Public. Defines all hooks for the public side of the site.
-	 *
-	 * Create an instance of the loader which will be used to register the hooks
-	 * with WordPress.
-	 *
-	 * @since    1.0.0
+	 * @since    1.2.0
 	 * @access   private
 	 */
 	private function load_dependencies() {
@@ -336,15 +295,6 @@ class CC_BPGHP {
 	}
 
 	/**
-	 * Register and enqueue public-facing style sheet.
-	 *
-	 * @since    1.0.0
-	 */
-	public function enqueue_styles() {
-		// wp_enqueue_style( $this->plugin_slug . '-plugin-styles', plugins_url( 'css/aha-extras-tab.css', __FILE__ ), array(), self::VERSION );
-	}
-
-	/**
 	 * Register and enqueue style sheet for edit screen.
 	 *
 	 * @since    1.0.0
@@ -364,22 +314,12 @@ class CC_BPGHP {
 	}
 
 	/**
-	 * Register and enqueue public-facing JavaScript files.
-	 *
-	 * @since    1.0.0
-	 */
-	public function enqueue_edit_scripts() {
-	}
-
-
-	/**
 	 * Set the group home page as the default page if one exists.
-	 * TODO: after BP 2.1 we can use this, I think.
 	 *
-	 * @since    1.0.0
+	 * @since    1.2.0
 	 */
 	public function change_group_default_tab( $default_tab ){
-	 	// Get the current group id.
+		// Get the current group id.
 		if ( $group_id = bp_get_current_group_id() ) {
 
 			$default_tab = ccghp_enabled_for_group( $group_id ) ? $this->plugin_slug : $default_tab;
@@ -390,7 +330,8 @@ class CC_BPGHP {
 	}
 
 	/**
-	 * Don't show the "activity" tab if a group home page exists, the group is not public, and if the user isn't a member of the group.
+	 * Don't show the "activity" tab if a group home page exists,
+	 * the group is not public, and if the user isn't a member of the group.
 	 *
 	 * @since    1.2.0
 	 */
@@ -400,7 +341,9 @@ class CC_BPGHP {
 			return;
 		}
 
-		// Change the behavior only if there is a group home page, the group is not public and the visitor is either not logged in or not a member.
+		/* Change the behavior only if there is a group home page,
+		 * the group is not public and the visitor is either not logged in or not a member.
+		 */
 		if ( ccghp_enabled_for_group( $group->id ) && bp_get_group_status( $group ) != 'public'	) {
 			if ( ! ( $user_id = get_current_user_id() ) || ! groups_is_user_member( $user_id, $group->id ) ) {
 				$bp = buddypress();
@@ -410,178 +353,129 @@ class CC_BPGHP {
 	}
 
 	/**
-	 * Move activity off to its own tab. We'll reuse the Home tab
-	 * TODO: after BP 2.1 we can do this another way, using the access and show_tab properties
-	 *
-	 * @since    1.0.0
-	 */
-	public function add_group_activity_tab() {
-	  // Only continue if we're on a group page
-	  if( ! bp_is_group() )
-	  	return false;
-
-	  $bp = buddypress();
-
-	  // Only add the "Home" tab if the group has a custom front page, so check for an associated post.
-	  // Only add the new "Activity" tab if the group is visible to the user.
-	  // Todo this will fail if a page is associated to multiple groups.
-	    $group_id = $bp->groups->current_group->id ;
-	    $visible = $bp->groups->current_group->is_visible ;
-	    $args =  array(
-	       'post_type'   => 'group_home_page',
-	       'posts_per_page' => '1',
-	       'meta_query'  => array(
-	                           array(
-	                            'key'           => 'group_home_page_association',
-	                            'value'         => $group_id,
-	                            'compare'       => '=',
-	                            'type'          => 'NUMERIC'
-	                            )
-	                        )
-	    );
-	    $custom_front_query = new WP_Query( $args );
-
-	  	// TODO New approach: don't move activity, just rename "Home" to "Activity" using a language file, then create the new tab to show the group home page when appropriate. Yah?
-	    if( $custom_front_query->have_posts() ) {
-	      bp_core_new_subnav_item(
-	        array(
-	          'name' => 'Activity',
-	          'slug' => 'activity',
-	          'parent_slug' => $bp->groups->current_group->slug,
-	          'parent_url' => bp_get_group_permalink( $bp->groups->current_group ),
-	          'position' => 11,
-	          'item_css_id' => 'nav-activity',
-	          'screen_function' => create_function('',"bp_core_load_template( apply_filters( 'groups_template_group_home', 'groups/single/home' ) );"),
-	          'user_has_access' => 1
-	        )
-	      );
-
-	      if ( bp_is_current_action( 'activity' ) ) {
-	        add_action( 'bp_template_content_header', create_function( '', 'echo "' . esc_attr( 'Activity' ) . '";' ) );
-	        add_action( 'bp_template_title', create_function( '', 'echo "' . esc_attr( 'Activity' ) . '";' ) );
-	      } // END if ( bp_is_current_action( 'activity' ) )
-	    } // END if( $custom_front_query->have_posts() )
-	}
-
-
-	/**
 	 * Generate Group Home Page custom post type to populate group home pages
 	 *
 	 * @since    1.0.0
 	 */
 	public function register_cpt_group_home_page() {
 
-	    $labels = array(
-	        'name' => _x( 'Hub Home Pages', 'group_home_page' ),
-	        'singular_name' => _x( 'Hub Home Page', 'group_home_page' ),
-	        'add_new' => _x( 'Add New', 'group_home_page' ),
-	        'add_new_item' => _x( 'Add New Hub Home Page', 'group_home_page' ),
-	        'edit_item' => _x( 'Edit Hub Home Page', 'group_home_page' ),
-	        'new_item' => _x( 'New Hub Home Page', 'group_home_page' ),
-	        'view_item' => _x( 'View Hub Home Page', 'group_home_page' ),
-	        'search_items' => _x( 'Search Hub Home Pages', 'group_home_page' ),
-	        'not_found' => _x( 'No hub home pages found', 'group_home_page' ),
-	        'not_found_in_trash' => _x( 'No hub home pages found in Trash', 'group_home_page' ),
-	        'parent_item_colon' => _x( 'Parent Hub Home Page:', 'group_home_page' ),
-	        'menu_name' => _x( 'Hub Homes', 'group_home_page' ),
-	    );
+		$labels = array(
+			'name' => _x( 'Hub Home Pages', 'group_home_page' ),
+			'singular_name' => _x( 'Hub Home Page', 'group_home_page' ),
+			'add_new' => _x( 'Add New', 'group_home_page' ),
+			'add_new_item' => _x( 'Add New Hub Home Page', 'group_home_page' ),
+			'edit_item' => _x( 'Edit Hub Home Page', 'group_home_page' ),
+			'new_item' => _x( 'New Hub Home Page', 'group_home_page' ),
+			'view_item' => _x( 'View Hub Home Page', 'group_home_page' ),
+			'search_items' => _x( 'Search Hub Home Pages', 'group_home_page' ),
+			'not_found' => _x( 'No hub home pages found', 'group_home_page' ),
+			'not_found_in_trash' => _x( 'No hub home pages found in Trash', 'group_home_page' ),
+			'parent_item_colon' => _x( 'Parent Hub Home Page:', 'group_home_page' ),
+			'menu_name' => _x( 'Hub Homes', 'group_home_page' ),
+		);
 
-	    $args = array(
-	        'labels' => $labels,
-	        'hierarchical' => false,
-	        'description' => 'This post type is queried when a group home page is requested.',
-	        'supports' => array( 'title', 'editor', 'revisions' ),
-	        'public' => true,
-	        'show_ui' => true,
-	        'show_in_menu' => true,
-	        'menu_position' => 51,
-	        //'menu_icon' => '',
-	        'show_in_nav_menus' => false,
-	        'publicly_queryable' => true,
-	        'exclude_from_search' => true,
-	        'has_archive' => false,
-	        'query_var' => true,
-	        'can_export' => true,
-	        'rewrite' => false,
-	        'capability_type' => 'post'//,
-	        //'map_meta_cap'    => true
-	    );
+		$args = array(
+			'labels' => $labels,
+			'hierarchical' => false,
+			'description' => 'This post type is queried when a group home page is requested.',
+			'supports' => array( 'title', 'editor', 'revisions' ),
+			'public' => true,
+			'show_ui' => true,
+			'show_in_menu' => true,
+			'menu_position' => 51,
+			//'menu_icon' => '',
+			'show_in_nav_menus' => false,
+			'publicly_queryable' => true,
+			'exclude_from_search' => true,
+			'has_archive' => false,
+			'query_var' => true,
+			'can_export' => true,
+			'rewrite' => false,
+			'capability_type' => 'post'//,
+			//'map_meta_cap'    => true
+		);
 
-	    register_post_type( 'group_home_page', $args );
+		register_post_type( 'group_home_page', $args );
 	}
 
-
 	/**
-	 * Add meta box to Group Home Page custom post type to associate posts with the group home page
+	 * Add meta box to Group Home Page custom post type to associate posts with the group home page.
 	 *
 	 * @since    1.0.0
 	 */
-	/* Register the meta boxes */
 	public function add_meta_boxes() {
 
-	  add_meta_box(
-	    'group-home-page-association',      // Unique ID
-	    esc_html__( 'Groups to Use this Home Page', 'group-home-page' ),    // Title
-	    array( $this, 'output_meta_box' ),   // Callback function
-	    'group_home_page',         // Admin page (or post type)
-	    'normal',         // Context
-	    'default'         // Priority
-	  );
+		add_meta_box(
+			'group-home-page-association',      // Unique ID
+			esc_html__( 'Groups to Use this Home Page', 'group-home-page' ),    // Title
+			array( $this, 'output_meta_box' ),   // Callback function
+			'group_home_page',         // Admin page (or post type)
+			'normal',         // Context
+			'default'         // Priority
+		);
 	}
 
-	/* Display the post meta box on the post type edit page in wp-admin */
+	/**
+	 * Display the meta box on the post type edit page in wp-admin.
+	 *
+	 * @since    1.0.0
+	 */
 	public function output_meta_box( $object, $box ) { ?>
+		<?php wp_nonce_field( basename( __FILE__ ), 'group_home_association_nonce' ); ?>
+		<!-- Loop through Group Tree with the addition of checkboxes -->
+		<?php if ( class_exists( 'BP_Groups_Hierarchy' ) ) {
+			$tree = BP_Groups_Hierarchy::get_tree();
+			// Use false below because we want an array of associations to be returned
+			$group_associations = get_post_meta( $object->ID, 'group_home_page_association', false );
 
-	  <?php wp_nonce_field( basename( __FILE__ ), 'group_home_association_nonce' ); ?>
-	<!-- Loop through Group Tree with the addition of checkboxes -->
-	  <?php if ( class_exists( 'BP_Groups_Hierarchy' ) ) {
-	    $tree = BP_Groups_Hierarchy::get_tree();
-	    //print_r($tree);
-	    $group_associations = get_post_meta( $object->ID, 'group_home_page_association', false ); // Use false because we want an array of associations to be returned
-	    //print_r($group_associations);
-
-	    echo '<ul class="group-tree">';
-	    foreach ( $tree as $branch ) {
-	      ?>
-	      <li>
-	        <input type="checkbox" id="group-home-page-assoc-<?php echo $branch->id ?>" name="group_home_page_association[]" value="<?php echo $branch->id ?>" <?php checked( in_array( $branch->id , $group_associations ) ); ?> />
-	        <label for="group-home-page-assoc-<?php echo $branch->id ?>"><?php echo $branch->name; ?></label>
-	      </li>
-	      <?php
-	    }
-	    echo '</ul>';
-
-	  } else {
-	  	echo "BP Group Hierarchy is needed to display the group tree.";
-	  }
+			echo '<ul class="group-tree">';
+			foreach ( $tree as $branch ) {
+				?>
+				<li>
+				<input type="checkbox" id="group-home-page-assoc-<?php echo $branch->id ?>" name="group_home_page_association[]" value="<?php echo $branch->id ?>" <?php checked( in_array( $branch->id , $group_associations ) ); ?> />
+				<label for="group-home-page-assoc-<?php echo $branch->id ?>"><?php echo $branch->name; ?></label>
+				</li>
+				<?php
+			}
+			echo '</ul>';
+		} else {
+			echo "BP Group Hierarchy is needed to display the group tree.";
+		}
 	}
 
-	/* Save the meta box's post metadata. */
+	/**
+	 * Save the meta box's post metadata.
+	 *
+	 * @since    1.0.0
+	 */
 	public function save_meta( $post_id, $post ) {
 
-	  /* Verify the nonce before proceeding. */
-	  if ( ! isset( $_POST['group_home_association_nonce'] ) || ! wp_verify_nonce( $_POST['group_home_association_nonce'], basename( __FILE__ ) ) )
-	    return $post_id;
+		// Verify the nonce before proceeding.
+		if ( ! isset( $_POST['group_home_association_nonce'] ) || ! wp_verify_nonce( $_POST['group_home_association_nonce'], basename( __FILE__ ) ) ) {
+			return;
+		}
 
-	  /* Get the post type object. */
-	  $post_type = get_post_type_object( $post->post_type );
+		// Get the post type object.
+		$post_type = get_post_type_object( $post->post_type );
 
-	  /* Check if the current user has permission to edit the post. */
-	  if ( ! current_user_can( $post_type->cap->edit_post, $post_id ) )
-	    return $post_id;
+		// Check if the current user has permission to edit the post.
+		if ( ! current_user_can( $post_type->cap->edit_post, $post_id ) ) {
+			return;
+		}
 
-	  if ( empty($_POST['group_home_page_association']) ) {
-			//If this element of POST is empty, then we should delete any stored values if they exist
-	        delete_post_meta($post_id, 'group_home_page_association');
-	    }
+		// Start from scratch.
+		delete_post_meta( $post_id, 'group_home_page_association' );
 
-	  if ( !empty($_POST['group_home_page_association']) && is_array($_POST['group_home_page_association']) ) {
-	        delete_post_meta($post_id, 'group_home_page_association');
-	        foreach ($_POST['group_home_page_association'] as $association) {
-	        	// This stores multiple entries, in the event that the page is associated with multiple groups. This approach makes the meta query much more straightforward.
-	            add_post_meta($post_id, 'group_home_page_association', $association);
-	        }
-	    }
+
+		if ( ! empty( $_POST['group_home_page_association'] ) && is_array( $_POST['group_home_page_association'] ) ) {
+			delete_post_meta( $post_id, 'group_home_page_association' );
+			foreach ( $_POST['group_home_page_association'] as $association ) {
+				/* This stores multiple entries, in the event that the page is associated with multiple groups.
+				 * This approach makes the meta query much more straightforward.
+				 */
+				add_post_meta( $post_id, 'group_home_page_association', $association );
+			}
+		}
 	}
 
 	/**
@@ -593,7 +487,7 @@ class CC_BPGHP {
 		if( ( bp_is_current_component( 'groups' ) && bp_is_current_action( 'admin' ) && bp_is_action_variable( $this->plugin_slug, 0 ) )
 			|| ( isset( $_POST['action'] ) && $_POST['action'] == 'upload-attachment' )
 			) {
-		    add_filter( 'map_meta_cap', array( $this, 'setup_map_meta_cap' ), 14, 4 );
+			add_filter( 'map_meta_cap', array( $this, 'setup_map_meta_cap' ), 14, 4 );
 		}
 	}
 
@@ -604,20 +498,22 @@ class CC_BPGHP {
 	 * @since    1.0.0
 	 */
 	public function setup_map_meta_cap( $primitive_caps, $meta_cap, $user_id, $args ) {
-		// In order to upload media, a user needs to have caps.
-		// Check if this is a request we want to filter.
+		/* In order to upload media, a user needs to have caps.
+		 * Check if this is a request we want to filter.
+		 */
 		if ( ! in_array( $meta_cap, array( 'upload_files', 'edit_post', 'delete_post' ) ) ) {
-	        return $primitive_caps;
-	    }
+			return $primitive_caps;
+		}
 
-		// It would be useful for a user to be able to delete her own uploaded media.
-	    // If this is someone else's post, we don't want to allow deletion of that, though.
-	    if ( $meta_cap == 'delete_post' && in_array( 'delete_others_posts', $primitive_caps ) ) {
-	        return $primitive_caps;
-	    }
+		/* It would be useful for a user to be able to delete her own uploaded media.
+		 * If this is someone else's post, we don't want to allow deletion of that, though.
+		 */
+		if ( $meta_cap == 'delete_post' && in_array( 'delete_others_posts', $primitive_caps ) ) {
+			return $primitive_caps;
+		}
 
-	  	// We pass a blank array back, meaning there's no capability required.
-	    $primitive_caps = array();
+		// We pass a blank array back, meaning there's no capability required.
+		$primitive_caps = array();
 
 		return $primitive_caps;
 	}
@@ -636,41 +532,42 @@ class CC_BPGHP {
 	/**
 	* Change what populates the "link to existing content" box in the wp_editor instance.
 	*
-	* @since 1.1
+	* @since 1.1.0
 	*
-	* @uses apply_filters()
-	* @return string
+	* @return array
 	*/
 	function limit_link_suggestion_query( $query ) {
 
-		if ( ! ccghp_is_settings_screen() )
+		if ( ! ccghp_is_settings_screen() ) {
 			return $query;
+		}
 
-	    // Limit the post types that are queried
-	    // We'll want to include bp_docs and group_stories, but they have weird queries (group-related) so we'll add them back in at the 'wp_link_query' filter.
-	    $query['post_type'] = array();
+		// Limit the post types that are queried.
+		// We'll want to include bp_docs and group_stories, but they have weird queries (group-related)
+		// so we'll add them back in at the 'wp_link_query' filter.
+		// $query['post_type'] = array('post');
 
-   	    // If the search is included in the query, wp will find nothing and things break. Nice.
-   	    if ( isset( $query['s'] ) ) {
-	   	    $query['keyphrase'] = $query['s'];
-	   	    unset( $query['s'] );
-	   	}
+		// If the search is included in the query, WP will find nothing and things break. Nice.
+		// if ( isset( $query['s'] ) ) {
+		// 	$query['keyphrase'] = $query['s'];
+		// 	unset( $query['s'] );
+		// }
 
-	    return $query;
+		return $query;
 	}
 
 	/**
-	* Change what populates the "link to existing content" box in the wp_editor instance.
-	*
-	* @since 1.1
-	*
-	* @uses apply_filters()
-	* @return string
-	*/
+	 * Change what populates the "link to existing content" box in the wp_editor instance.
+	 *
+	 * @since 1.1.0
+	 *
+	 * @return array of result posts
+	 */
 	function filter_link_suggestions( $results, $query ) {
 
-		if ( ! ccghp_is_settings_screen() )
+		if ( ! ccghp_is_settings_screen() ) {
 			return $results;
+		}
 
 		// We're replacing the suggestions, so start with a blank slate.
 		$results = array();
@@ -680,18 +577,20 @@ class CC_BPGHP {
 		$narratives = $this->get_shareable_narratives( $query );
 		$results = array_merge( $docs, $narratives );
 
-		// Sort the results by datetime, descending
-		// Create the sort column array for array_multisort to use
+		/* Sort the results by datetime, descending.
+		 * Create the sort column array for array_multisort to use.
+		 */
 		foreach ( $results as $key => $value ) {
-		    $datetime[$key]  = $value['datetime'];
+			$datetime[$key]  = $value['datetime'];
 		}
+
 		// Add $results as the last parameter, to sort by the common key
 		array_multisort( $datetime, SORT_DESC, $results );
 
 		// Return the correct records, based on the query.
 		$results = array_slice( $results, $query['offset'], $query['posts_per_page'] );
 
-	    return $results;
+		return $results;
 	}
 
 	/**

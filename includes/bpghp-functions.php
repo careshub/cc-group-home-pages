@@ -85,6 +85,7 @@ function ccghp_is_group_home_page() {
 
     return false;
 }
+
 /**
  * Check to see if we're viewing a group's home page setting screen.
  * Like: /istanbul-secrets/admin/group-home/
@@ -99,29 +100,3 @@ function ccghp_is_settings_screen() {
 
     return false;
 }
-
-
-////////////////
-/**
- * Print Filters For
- *
- * Discover what functions are attached to a given hook in WordPress.
- */
-function print_filters_for( $hook = null ) {
-    global $wp_filter;
-
-    // Error handling
-    if ( !$hook )
-        return new WP_Error( 'no_hook_provided', __("You didn't provide a hook.") );
-    if ( !isset( $wp_filter[$hook] ) )
-        return new WP_Error( 'hook_doesnt_exist', __("$hook doesn't exist.") );
-
-    // Display output
-    echo '<details closed>';
-    echo "<summary>Hook summary: <code>$hook</code></summary>";
-    echo '<pre style="text-align:left; font-size:11px;">';
-    print_r( $wp_filter[$hook] );
-    echo '</pre>';
-    echo '</details>';
-}
-

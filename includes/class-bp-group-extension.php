@@ -8,7 +8,10 @@
  * @copyright 2014 CommmunityCommons.org
  */
 
-// We're mostly using the group extension to create a way for group admins to edit the group's home page via the group's Admin tab
+/* We're using the group extension to do these things:
+ * - allow group admins to edit the group's home page via the group's Manage tab.
+ * - add the new "home page" tab and allow anyone to see it.
+ */
 
  if ( class_exists( 'BP_Group_Extension' ) ) : // Recommended, to prevent problems during upgrade or when Groups are disabled
 
@@ -127,19 +130,8 @@
 	    	$this->ccghp_save_routine( $group_id );
 		}
 
-	    /**
-	     * edit_screen_save() is more specific and only used on the front end edit tab
-	     */
-	    function edit_screen_save( $group_id = 0 ) {
-	    	// Use shared routine
-	    	$this->ccghp_save_routine( $group_id );
-
-	    	// TODO: BP 2.1 will make this unnecessary
-	        bp_core_redirect( bp_get_group_permalink( groups_get_group( array( 'group_id' => $group_id ) ) ) . 'admin/' . $this->slug );
-		}
-
         /**
-         * Use this function to display the actual content of your group extension when the nav item is selected
+         * Use this function to display the actual content of your group extension when the nav item is selected.
          */
         function display( $group_id = null ) {
         	if ( is_null( $group_id ) ) {
@@ -166,54 +158,20 @@
         }
 
         /**
-         * If your group extension requires a meta box in the Dashboard group admin,
-         * use this method to display the content of the metabox
-         *
-         * As in the case of create_screen() and edit_screen(), it may be helpful
-         * to abstract shared markup into a separate method.
-         *
-         * This is an optional method. If you don't need/want a metabox on the group
-         * admin panel, don't define this method in your class.
-         *
-         * <a href="http://buddypress.org/community/members/param/" rel="nofollow">@param</a> int $group_id The numeric ID of the group being edited. Use
-         *   this id to pull up any relevant metadata
-         *
+         * A shared save routine.
          */
-        // We're using the fallback method setting_screen, but may use this later.
-        // function admin_screen( $group_id ) {
-        //     if ( ccghp_enabled_for_group( $group_id ) ){
-        //      	echo '<p>This group has a custom home page.</p>';
-        //     } else {
-        //      	echo '<p>This group <strong>does not</strong> have a custom home page.</p>';
-        //     };
-        // }
-
-        /**
-         * The routine run after the group is saved on the Dashboard group admin screen
-         *
-         * <a href="http://buddypress.org/community/members/param/" rel="nofollow">@param</a> int $group_id The numeric ID of the group being edited. Use
-         *   this id to pull up any relevant metadata
-         */
-        // We're using the fallback method setting_screen_save, but may use this later.
-        // function admin_screen_save( $group_id ) {
-            // Grab your data out of the $_POST global and save as necessary
-        // }
-
-        // function widget_display() {
-        // }
-
         public function ccghp_save_routine( $group_id ) {
-        	// If the page is new, $_POST['create_a_group_home_page'] will be set
-	    	// If the page already exists, $_POST['group_home_page_content'] will be set
+        	/* If the page is new, $_POST['create_a_group_home_page'] will be set
+	    	 * If the page already exists, $_POST['group_home_page_content'] will be set
+	    	 */
 	    	if ( isset( $_POST['group_home_page_content'] ) || isset( $_POST['create_a_group_home_page'] ) ) {
 
 	    		// Get group name to use for title
 	    		$current_group = groups_get_group( array( 'group_id' => $group_id ) );
-	    		//Get the selected "published" status
+	    		// Get the selected "published" status
     		    $published_status = in_array( $_POST['cc_group_home_published'], array( 'publish', 'draft' ) ) ? $_POST['cc_group_home_published'] : 'auto-draft';
     		    $post_content = ! empty( $_POST['group_home_page_content'] ) ? $_POST['group_home_page_content'] : '';
 
-		    	// Some defaults
 				$post_data = array(
 	                'post_type' => 'group_home_page',
 	                'post_title' => $current_group->name,
@@ -226,12 +184,13 @@
 	   	        if ( isset( $_POST['group_home_page_post_id'] ) && is_numeric( $_POST['group_home_page_post_id'] ) ) {
 	   	        	$post_data['ID'] = $_POST['group_home_page_post_id'];
 	   	        } else {
-	   	        	//If this is a new post, we'll add an author id.
+	   	        	// If this is a new post, we'll add an author id.
 	   	        	$post_data['post_author'] = get_current_user_id();
 	   	        }
 
-	        	// Save the post
-	        	// WP requires post_content by default, so we temporarily lift that restriction.
+	        	/* Save the post
+	        	 * WP requires post_content by default, so we temporarily lift that restriction.
+	        	 */
 	        	if ( empty( $post_content ) ) {
 		        	add_filter( 'wp_insert_post_empty_content', '__return_false' );
 		        }
@@ -246,7 +205,6 @@
 					update_post_meta( $post_id, 'group_home_page_association', $group_id, false );
 					// Add a success message
 					bp_core_add_message( 'Group home page was successfully updated.', 'success' );
-
 				} else {
 					// Something went wrong
 					bp_core_add_message( 'We couldn\'t update the group home page at this time.', 'error' );

@@ -18,11 +18,6 @@ Author: David Cavins
  * @copyright 2014 CommmunityCommons.org
  */
 
-/*
-* TODO: At the moment, this relies on template fixes to work.
-* Post-BP 2.1, we should be able to do everything using the visibility and access settings and not rely on custom template changes.
-*/
-
 // Define a constant that can be checked to see if the component is installed or not.
 define( 'CC_GROUP_HOME_PAGES_IS_INSTALLED', 1 );
 
@@ -33,7 +28,7 @@ define( 'CC_GROUP_HOME_PAGES_VERSION', '1.3.0' );
 // Define a constant that we can use to construct file paths throughout the component
 define( 'CC_GROUP_HOME_PAGES_PLUGIN_DIR', dirname( __FILE__ ) );
 
-/* Do our setup after BP is loaded, but before we create the group extension */
+// Do our setup after BP is loaded, but before we create the group extension.
 function cc_bpghp_class_init() {
 	// The main class
 	require_once( dirname( __FILE__ ) . '/includes/class-CC_BPGHP.php' );

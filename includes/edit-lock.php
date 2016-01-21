@@ -82,13 +82,13 @@ class CC_BPGHP_Edit_Lock extends CC_BPGHP {
 			wp_die( 0 );
 		}
 
-	    if ( ! $lock = get_post_meta( $post_id, '_edit_lock', true ) ) {
-	        wp_die( 0 );
-	    }
+		if ( ! $lock = get_post_meta( $post_id, '_edit_lock', true ) ) {
+			wp_die( 0 );
+		}
 
-	    $lock = array_map( 'absint', explode( ':', $lock ) );
+		$lock = array_map( 'absint', explode( ':', $lock ) );
 
-	    // Only continue if the acting user is the lock holder.
+		// Only continue if the acting user is the lock holder.
 		if ( $lock[1] != get_current_user_id() ) {
 			wp_die( 0 );
 		}
@@ -115,28 +115,28 @@ class CC_BPGHP_Edit_Lock extends CC_BPGHP {
  * @return bool|int False: not locked or locked by current user. Int: user ID of user with lock.
  */
 function cc_bpghp_check_post_lock( $post_id ) {
-    if ( ! $post = get_post( $post_id ) ) {
-        return false;
-    }
+	if ( ! $post = get_post( $post_id ) ) {
+		return false;
+	}
 
-    if ( ! $lock = get_post_meta( $post_id, '_edit_lock', true ) ) {
-        return false;
-    }
+	if ( ! $lock = get_post_meta( $post_id, '_edit_lock', true ) ) {
+		return false;
+	}
 
-    $lock = explode( ':', $lock );
-    $time = $lock[0];
-    $user_id = isset( $lock[1] ) ? $lock[1] : get_post_meta( $post_id, '_edit_last', true );
+	$lock = explode( ':', $lock );
+	$time = $lock[0];
+	$user_id = isset( $lock[1] ) ? $lock[1] : get_post_meta( $post_id, '_edit_last', true );
 
-    $heartbeat_interval = cc_bpghp_heartbeat_pulse();
+	$heartbeat_interval = cc_bpghp_heartbeat_pulse();
 
-    // Bail out of the lock if four pings have been missed (one minute, by default)
-    $time_window = apply_filters( 'cc_bpghp_post_lock_interval', $heartbeat_interval * 4 );
+	// Bail out of the lock if four pings have been missed (one minute, by default)
+	$time_window = apply_filters( 'cc_bpghp_post_lock_interval', $heartbeat_interval * 4 );
 
-    if ( $time && $time > time() - $time_window && $user_id != get_current_user_id() ) {
-        return $user_id;
-    }
+	if ( $time && $time > time() - $time_window && $user_id != get_current_user_id() ) {
+		return $user_id;
+	}
 
-    return false;
+	return false;
 }
 
 /**
