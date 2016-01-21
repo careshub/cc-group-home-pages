@@ -7,3 +7,6 @@
 .mce-btn button:hover {
 	border: none;
 }
+label.enable-plugin {
+	margin: 1em 0;
+}

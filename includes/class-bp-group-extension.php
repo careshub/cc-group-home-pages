@@ -78,7 +78,7 @@
 		        if ( empty( $custom_front_query->posts ) ) {
 					// The group doesn't have a front page yet, so we need to create one. For a variety of reasons, but mostly we need the post ID.
 					?>
-					<label><input type='checkbox' name='create_a_group_home_page' value='1'> This hub should have a home page.</label>
+					<label class="enable-plugin"><input type='checkbox' name='create_a_group_home_page' value='1'> This hub should have a home page.</label>
 					<?php
 
 		        } else {
