@@ -17,7 +17,7 @@ class CC_BPGHP {
 	 *
 	 * @var     string
 	 */
-	const VERSION = '1.2.0';
+	const VERSION = '1.3.0';
 
 	/**
 	 *
@@ -676,10 +676,8 @@ class CC_BPGHP {
 		$results = array();
 
 		// Fetch allowable bp_docs, maps, reports
-		$docs = $this->get_shareable_docs();
-		// $maps = ccgn_get_shareable_maps_reports( $group_id = null, $type = 'map' );
-		// $reports = ccgn_get_shareable_maps_reports( $group_id = null, $type = 'report' );
-		$narratives = $this->get_shareable_narratives();
+		$docs = $this->get_shareable_docs( $query );
+		$narratives = $this->get_shareable_narratives( $query );
 		$results = array_merge( $docs, $narratives );
 
 		// Sort the results by datetime, descending
@@ -690,67 +688,118 @@ class CC_BPGHP {
 		// Add $results as the last parameter, to sort by the common key
 		array_multisort( $datetime, SORT_DESC, $results );
 
-		// Oh, handle search terms if included. Not awesome (doesn't search content).
-		if ( isset( $query['keyphrase'] ) ) {
-			$found = array();
-			foreach ($results as $result) {
-				if ( stripos( $result['title'], $query['keyphrase'] ) !== false ) {
-					$found[] = $result;
-				}
-			}
-			$results = $found;
-		}
-
 		// Return the correct records, based on the query.
 		$results = array_slice( $results, $query['offset'], $query['posts_per_page'] );
 
 	    return $results;
 	}
 
-	public function get_shareable_docs( $group_id = null ) {
-		$group_id = !( $group_id ) ? bp_get_current_group_id() : $group_id ;
-		$docs_args = array( 'group_id' => $group_id );
+	/**
+	 * Find BP Docs that could be included in a group home page.
+	 *
+	 * @since 1.1.0
+	 *
+	 * @return array of result posts
+	 */
+	public function get_shareable_docs( $query, $group_id = null ) {
+		$group_id = ! empty( $group_id ) ? $group_id : bp_get_current_group_id();
 		$good_docs = array();
 
-	    if ( function_exists('bp_docs_has_docs') && bp_docs_has_docs( $docs_args ) ) :
-	        while ( bp_docs_has_docs() ) :
-	            bp_docs_the_doc();
-	            //Only allow to attach docs that have read set to anyone.
-	            $doc_id = get_the_ID();
-	            $settings = bp_docs_get_doc_settings( $doc_id );
-	            if ( $settings['read'] == 'anyone') {
-					$good_docs[] = array(
-						'ID' 		=> $doc_id,
-						'title' 	=> get_the_title(),
-						'permalink' => get_the_permalink(),
-						'info' 		=> 'Doc',
-						'datetime'	=> get_the_date('Ymd'),
-						);
-	            }
-	        endwhile;
-	    endif;
+		if ( ! function_exists( 'bp_docs_get_associated_item_tax_name' ) ) {
+			return $good_docs;
+		}
 
-	    return $good_docs;
+		$args = array(
+			'post_type' => 'bp_doc',
+			'tax_query' => array(
+					'relation' => 'AND',
+					array(
+						'taxonomy' => bp_docs_get_associated_item_tax_name(),
+						'field'    => 'slug',
+						'terms'    => array( bp_docs_get_term_slug_from_group_id( $group_id ) ),
+						),
+					array(
+						'taxonomy' => bp_docs_get_access_tax_name(),
+						'field'    => 'slug',
+						'terms'    => array( bp_docs_get_access_term_anyone() ),
+						),
+				),
+			'posts_per_page' => 20,
+			'post_status' => 'publish',
+		);
+
+		if ( isset( $query['s'] ) && ! empty( $query['s'] ) ) {
+			$args['s'] = $query['s'];
+		}
+
+		// We're manually limiting the docs returned, so we'll short-circuit the docs protection.
+		remove_action( 'pre_get_posts', 'bp_docs_general_access_protection', 28 );
+
+		$docs = new WP_Query( $args );
+
+		// Un-short-circuit the docs protection.
+		add_action( 'pre_get_posts', 'bp_docs_general_access_protection', 28 );
+
+		foreach ( $docs->posts as $doc ) {
+			$good_docs[] = array(
+				'ID' 		=> $doc->ID,
+				'title' 	=> $doc->post_title,
+				'permalink' => get_the_permalink( $doc->ID ),
+				'info' 		=> 'Doc',
+				'datetime'	=> date('Ymd', strtotime( $doc->post_date) ),
+				);
+		}
+
+		return $good_docs;
 	}
 
-	public function get_shareable_narratives( $group_id = null ) {
-		$group_id = !( $group_id ) ? bp_get_current_group_id() : $group_id ;
-		$narratives = array();
+
+	/**
+	 * Find Hub Narratives that could be included in a group home page.
+	 *
+	 * @since 1.1.0
+	 *
+	 * @return array of result posts
+	 */
+	public function get_shareable_narratives( $query, $group_id = null ) {
+		$group_id = ! empty( $group_id ) ? $group_id : bp_get_current_group_id();
 		$retval = array();
 
-		if ( function_exists('ccgn_get_narratives_for_group') ) {
-			$narratives = ccgn_get_narratives_for_group( $group_id, 'publish' );
-
-		   foreach ($narratives as $narrative) {
-			   	$retval[] = array(
-						'ID' 		=> $narrative->ID,
-						'title' 	=> $narrative->post_title,
-						'permalink' => get_permalink( $narrative->ID ),
-						'info' 		=> 'Hub Narrative',
-						'datetime'	=> date( 'Ymd', strtotime( $narrative->post_date ) ),
-						);
-		   }
+		if ( ! function_exists( 'ccgn_get_group_term_id' ) ) {
+			return $retval;
 		}
+
+		$args = array(
+			'post_type' => 'group_story',
+			'tax_query' => array(
+				array(
+					'taxonomy' => 'ccgn_related_groups',
+					'field' => 'id',
+					'terms' => ccgn_get_group_term_id( $group_id ),
+					'include_children' => false,
+					// 'operator' => 'IN'
+				)
+			),
+			'posts_per_page' => 20,
+			'post_status' => 'publish',
+		);
+
+		if ( isset( $query['s'] ) && ! empty( $query['s'] ) ) {
+			$args['s'] = $query['s'];
+		}
+
+		$narratives = new WP_Query( $args );
+
+		foreach ( $narratives->posts as $narrative ) {
+			$retval[] = array(
+				'ID' 		=> $narrative->ID,
+				'title' 	=> $narrative->post_title,
+				'permalink' => get_permalink( $narrative->ID ),
+				'info' 		=> 'Hub Narrative',
+				'datetime'	=> date( 'Ymd', strtotime( $narrative->post_date ) ),
+			);
+		}
+
 		return $retval;
 	}
 
