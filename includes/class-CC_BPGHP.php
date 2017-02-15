@@ -374,7 +374,7 @@ class CC_BPGHP {
 		);
 
 		$args = array(
-			'labels' => $labels,
+			'labels' => apply_filters( 'ccghp_cpt_labels', $labels ),
 			'hierarchical' => false,
 			'description' => 'This post type is queried when a group home page is requested.',
 			'supports' => array( 'title', 'editor', 'revisions' ),
