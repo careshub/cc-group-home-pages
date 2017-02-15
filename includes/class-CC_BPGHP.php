@@ -666,7 +666,7 @@ class CC_BPGHP {
 				'ID' 		=> $narrative->ID,
 				'title' 	=> $narrative->post_title,
 				'permalink' => get_permalink( $narrative->ID ),
-				'info' 		=> 'Hub Narrative',
+				'info' 		=> apply_filters( 'ccghp_narrative_name', 'Hub Narrative' ),
 				'datetime'	=> date( 'Ymd', strtotime( $narrative->post_date ) ),
 			);
 		}
