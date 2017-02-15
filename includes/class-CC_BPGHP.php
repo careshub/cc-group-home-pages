@@ -374,7 +374,7 @@ class CC_BPGHP {
 		);
 
 		$args = array(
-			'labels' => $labels,
+			'labels' => apply_filters( 'ccghp_cpt_labels', $labels ),
 			'hierarchical' => false,
 			'description' => 'This post type is queried when a group home page is requested.',
 			'supports' => array( 'title', 'editor', 'revisions' ),
@@ -666,7 +666,7 @@ class CC_BPGHP {
 				'ID' 		=> $narrative->ID,
 				'title' 	=> $narrative->post_title,
 				'permalink' => get_permalink( $narrative->ID ),
-				'info' 		=> 'Hub Narrative',
+				'info' 		=> apply_filters( 'ccghp_narrative_name', 'Hub Narrative' ),
 				'datetime'	=> date( 'Ymd', strtotime( $narrative->post_date ) ),
 			);
 		}

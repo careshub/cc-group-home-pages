@@ -31,7 +31,7 @@
 	           		'nav_item_position' => 1,
 	           		'screens' => array(
 		                'edit' => array(
-		                    'name' => 'Hub Home Page',
+		                    'name' => apply_filters( 'ccghp_edit_screen_name', 'Hub Home Page' ),
 		                    'enabled' => true,
 		                ),
 		                'create' => array(
