@@ -336,18 +336,17 @@ class CC_BPGHP {
 	 */
 	public function hide_activity_tab(){
 		// Only fire if viewing a single group.
-		if ( ! bp_is_groups_component() || ! $group = groups_get_current_group() ){
+		if ( current_user_can( 'bp_moderate' ) || ! bp_is_groups_component() || ! $group = groups_get_current_group() ){
 			return;
 		}
 
 		/* Change the behavior only if there is a group home page,
 		 * the group is not public and the visitor is either not logged in or not a member.
 		 */
-		if ( ccghp_enabled_for_group( $group->id ) && bp_get_group_status( $group ) != 'public'	) {
-			if ( ! ( $user_id = get_current_user_id() ) || ! groups_is_user_member( $user_id, $group->id ) ) {
-				$bp = buddypress();
-				unset( $bp->bp_options_nav[$bp->groups->current_group->slug]['home'] );
-			}
+		if ( ccghp_enabled_for_group( $group->id )
+			&& bp_get_group_status( $group ) != 'public'
+			&& ! groups_is_user_member( get_current_user_id(), $group->id ) ) {
+			 bp_core_remove_subnav_item( bp_get_group_slug( $group ), 'home', 'groups' );
 		}
 	}
 
