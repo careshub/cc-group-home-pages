@@ -355,7 +355,7 @@ class CC_BPGHP {
 	 *
 	 * @since    1.2.0
 	 */
-	public function hide_activity_tab(){
+	public function hide_activity_tab() {
 		// Only fire if viewing a single group.
 		if ( ! bp_is_groups_component() || ! $group = groups_get_current_group() ){
 			return;
@@ -366,8 +366,7 @@ class CC_BPGHP {
 		 */
 		if ( ccghp_enabled_for_group( $group->id ) && bp_get_group_status( $group ) != 'public'	) {
 			if ( ! ( $user_id = get_current_user_id() ) || ! groups_is_user_member( $user_id, $group->id ) ) {
-				$bp = buddypress();
-				unset( $bp->bp_options_nav[$bp->groups->current_group->slug]['home'] );
+				bp_core_remove_subnav_item( bp_get_current_group_slug(), 'home', 'groups' );
 			}
 		}
 	}
