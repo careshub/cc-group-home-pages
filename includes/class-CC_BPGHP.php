@@ -64,6 +64,9 @@ class CC_BPGHP {
 		// Set the group home page as the default page if one exists.
 		add_filter( 'bp_groups_default_extension', array( $this, 'change_group_default_tab' ) );
 
+		// Rename the old "Home" tab to "Activity" if we've added a custom group home page.
+		add_action( 'bp_actions', array( $this, 'rename_activity_tab' ) );
+
 		// Don't show the "activity" tab if a group home page exists and if the user isn't a member of the group.
 		add_action( 'bp_setup_nav', array( $this, 'hide_activity_tab' ), 99 );
 
@@ -326,6 +329,24 @@ class CC_BPGHP {
 		}
 
 		return $default_tab;
+	}
+
+	/**
+	 * If we're adding the custom group home tab,
+	 * rename the original "Home" (activity) tab to "Activity".
+	 *
+	 * @since    1.4.0
+	 */
+	function rename_activity_tab() {
+
+		if ( ! bp_is_group() || ! ccghp_enabled_for_group( bp_get_current_group_id() ) ) {
+			return;
+		}
+		buddypress()->groups->nav->edit_nav( array(
+			'name'   => 'Activity',
+			'css_id' => 'activity'
+		), 'home', bp_current_item() );
+
 	}
 
 	/**
