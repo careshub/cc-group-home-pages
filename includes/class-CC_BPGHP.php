@@ -531,8 +531,13 @@ class CC_BPGHP {
 			return $primitive_caps;
 		}
 
-		// We pass a blank array back, meaning there's no capability required.
-		$primitive_caps = array();
+		/*
+		 * If the user is a site or group admin, we allow them to upload media.
+		 * We pass a blank array back, meaning there's no capability required.
+		 */
+		if ( bp_current_user_can( 'bp_moderate' ) || groups_is_user_admin( get_current_user_id(), bp_get_current_group_id() ) ) {
+			$primitive_caps = array();
+		}
 
 		return $primitive_caps;
 	}

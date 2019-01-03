@@ -2,7 +2,7 @@
 /*
 Plugin Name: CC Group Home Pages
 Description: Adds custom group home pages editable by group admins
-Version: 1.3.0
+Version: 1.4.0
 Requires at least: 3.9
 Tested up to: 3.9
 License: GPL3
