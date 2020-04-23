@@ -440,12 +440,14 @@ class CC_BPGHP {
 	 * @since    1.0.0
 	 */
 	public function output_meta_box( $object, $box ) { ?>
-		<?php wp_nonce_field( basename( __FILE__ ), 'group_home_association_nonce' ); ?>
+		<?php
+		wp_nonce_field( basename( __FILE__ ), 'group_home_association_nonce' );
+		// Use false below because we want an array of associations to be returned
+		$group_associations = get_post_meta( $object->ID, 'group_home_page_association', false );
+		?>
 		<!-- Loop through Group Tree with the addition of checkboxes -->
 		<?php if ( class_exists( 'BP_Groups_Hierarchy' ) ) {
 			$tree = BP_Groups_Hierarchy::get_tree();
-			// Use false below because we want an array of associations to be returned
-			$group_associations = get_post_meta( $object->ID, 'group_home_page_association', false );
 
 			echo '<ul class="group-tree">';
 			foreach ( $tree as $branch ) {
@@ -458,7 +460,31 @@ class CC_BPGHP {
 			}
 			echo '</ul>';
 		} else {
-			echo "BP Group Hierarchy is needed to display the group tree.";
+			// Generic BuddyPress
+			$groups_args = array(
+				'type'     => 'alphabetical',
+			);
+			if ( bp_has_groups( $groups_args ) ) :
+				?>
+				<ul>
+				<?php
+				while ( bp_groups() ) : bp_the_group();
+					$group_id = bp_get_group_id();
+					?>
+					<li>
+					<input type="checkbox" id="group-home-page-assoc-<?php echo $group_id; ?>" name="group_home_page_association[]" value="<?php echo $group_id; ?>" <?php checked( in_array( $group_id, $group_associations ) ); ?> />
+					<label for="group-home-page-assoc-<?php echo $group_id; ?>"><?php echo bp_group_name(); ?></label>
+					</li>
+					<?php
+				endwhile;
+				?>
+				</ul>
+				<?php
+			else :
+				?>
+				<p>No groups were found.</p>
+				<?php
+			endif;
 		}
 	}
 
