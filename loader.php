@@ -30,7 +30,10 @@ define( 'CC_GROUP_HOME_PAGES_PLUGIN_DIR', dirname( __FILE__ ) );
 
 // Do our setup after BP is loaded, but before we create the group extension.
 function cc_bpghp_class_init() {
-	// The main class
+	// The main class, only proceed if groups are active.
+	if ( ! bp_is_active( 'groups' ) ) {
+		return;
+	}
 	require_once( dirname( __FILE__ ) . '/includes/class-CC_BPGHP.php' );
 	add_action( 'bp_include', array( 'CC_BPGHP', 'get_instance' ), 21 );
 }
